@@ -14,6 +14,12 @@ name: Daily QA run
 on:
   workflow_dispatch:   # manual only
     inputs:
+      mode:
+        description: 'probe = fast checks (3 runs per page, probe-summary.md, no recorder/narration); record = full clips'
+        required: false
+        type: choice
+        options: [record, probe]
+        default: record
       scope:
         description: 'Pages to record when "pages" is empty: auto (all if a CopilotKit version changed vs the committed lockfile, else ❌ ⚠️ + stale ✅), all, failures (❌), or failures + partials (❌ ⚠️)'
         required: false
@@ -26,7 +32,7 @@ on:
         type: string
         default: ''
       shards:
-        description: 'Parallel emulator runners to split the pages across (1-20; empty = 4, or ceil(pages/3) when pages is set)'
+        description: 'Parallel emulator runners (1-20; empty = record: 6, or ceil(pages/3) when pages is set; probe: ceil(pages/6))'
         required: false
         type: string
         default: ''
@@ -98,6 +104,7 @@ jobs:
           SHARDS: ${{ inputs.shards }}
           PAGES_GIVEN: ${{ inputs.pages != '' && '1' || '' }}
           IGNORE_DRIFT: ${{ inputs.ignore_drift || false }}
+          MODE: ${{ inputs.mode || 'record' }}
         run: |
           set -euo pipefail
           (cd autorecorder && npx tsx -e "import('./config/pages.config.ts').then(m=>{const s=m.SKIP_RECORDING||{};console.log(JSON.stringify(m.PAGES.filter(p=>!s[p.id]).map(p=>({id:p.id,docPath:p.docPath??null}))))})" | tail -1) > recorder-pages.json
@@ -198,7 +205,11 @@ jobs:
           echo "pages: $PAGES"
           # Doc drift (DRIFT.md): pages whose doc changed since doc-snapshot/ are held, not recorded.
           mkdir -p plan-out
-          if [ "$IGNORE_DRIFT" = "true" ]; then
+          if [ "$MODE" = "probe" ]; then
+            # WORKFLOW.md B1: probe every page, held pages too. Drift is still written for the summary.
+            node .qa/tools/drift.mjs --out=plan-out/drift --recorder=recorder-pages.json > plan-out-drift.log 2>&1 || true
+            echo "probe mode: drift-held pages are probed too"
+          elif [ "$IGNORE_DRIFT" = "true" ]; then
             node .qa/tools/drift.mjs --out=plan-out/drift --recorder=recorder-pages.json > plan-out-drift.log 2>&1 || true
             echo "ignore_drift: held pages are recorded too"
           elif node .qa/tools/drift.mjs --out=plan-out/drift --recorder=recorder-pages.json --pages="$PAGES" > plan-out-drift.log 2>&1 && [ -f plan-out/drift/keep.txt ]; then
@@ -211,20 +222,24 @@ jobs:
           # Evidence check: a finding clip whose FINDING_EVIDENCE text is not on the live doc page would
           # film a skipped drag-select. Those pages are held like drift. A tool fault never blocks the run.
           rm -f plan-out/evidence-keep.txt
-          node .qa/tools/evidence_check.mjs --pages="$PAGES" --out=plan-out --summary="$GITHUB_STEP_SUMMARY" > plan-out-evidence.log 2>&1 || true
-          cat plan-out-evidence.log
-          if [ -f plan-out/evidence-keep.txt ]; then PAGES=$(cat plan-out/evidence-keep.txt)
-          else echo "::warning::evidence check wrote no result: recording without it"; fi
+          if [ "$MODE" != "probe" ]; then
+            node .qa/tools/evidence_check.mjs --pages="$PAGES" --out=plan-out --summary="$GITHUB_STEP_SUMMARY" > plan-out-evidence.log 2>&1 || true
+            cat plan-out-evidence.log
+            if [ -f plan-out/evidence-keep.txt ]; then PAGES=$(cat plan-out/evidence-keep.txt)
+            else echo "::warning::evidence check wrote no result: recording without it"; fi
+          fi
           echo "pages after evidence check: $PAGES"
-          python3 - "$PAGES" "$SHARDS" "$ISOLATE_PAGES" "$PAGES_GIVEN" >> "$GITHUB_OUTPUT" <<'PY'
+          python3 - "$PAGES" "$SHARDS" "$ISOLATE_PAGES" "$PAGES_GIVEN" "$MODE" >> "$GITHUB_OUTPUT" <<'PY'
           import json, sys, datetime, math
           pages = [p.strip() for p in sys.argv[1].split(",") if p.strip()]
           if (sys.argv[2] or "").strip():
               n = int(float(sys.argv[2]))
+          elif sys.argv[5] == "probe":
+              n = math.ceil(len(pages) / 6)   # probe: ~6 pages (x3 runs) per shard
           elif sys.argv[4]:
               n = math.ceil(len(pages) / 3)   # small explicit run: ~3 pages per shard
           else:
-              n = 4
+              n = 6
           n = max(1, min(20, n))
           iso = {p.strip() for p in sys.argv[3].split(",") if p.strip()}
           normal = [p for p in pages if p not in iso]
@@ -265,11 +280,10 @@ jobs:
     if: contains(needs.plan.outputs.matrix, '"pages"')
     runs-on: ubuntu-latest
     timeout-minutes: 75
+    outputs:
+      nmkey: ${{ steps.nmkey.outputs.key }}
     steps:
       - uses: actions/checkout@v4
-      - name: Hash of the committed lockfile (node_modules cache key)
-        id: lockhash
-        run: echo "app=$(sha256sum MyCopilotApp/package-lock.json | cut -c1-16)" >> "$GITHUB_OUTPUT"
       - name: Today's lockfiles from the plan job
         uses: actions/download-artifact@v4
         continue-on-error: true
@@ -279,18 +293,52 @@ jobs:
       - name: Use today's lockfiles (absent = the committed ones)
         run: |
           if [ -d plan-out/resolved ]; then cp -rv plan-out/resolved/. . ; else echo "no resolved lockfiles: installing the committed ones"; fi
-      # The APK key hashes the lockfile actually built (today's resolved one, copied above): a bumped
-      # native package changes it, so a stale native build is never reused.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      # node_modules is installed and SAVED only here; the shards restore this exact key (no restore-keys).
+      - name: node_modules key (the lockfiles actually installed)
+        id: nmkey
+        run: echo "key=nm-${{ runner.os }}-node${{ env.NODE_VERSION }}-v3-$(cat MyCopilotApp/package-lock.json autorecorder/package-lock.json | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
+      - name: Restore node_modules
+        id: nm-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            MyCopilotApp/node_modules
+            autorecorder/node_modules
+          key: ${{ steps.nmkey.outputs.key }}
+          restore-keys: nm-${{ runner.os }}-node${{ env.NODE_VERSION }}-v3-
+      - name: Install dependencies (app + recorder)
+        run: |
+          set -euo pipefail
+          for d in MyCopilotApp autorecorder; do npm install --prefix "$d" --no-audit --no-fund; done
+      - name: Save node_modules
+        if: steps.nm-restore.outputs.cache-matched-key != steps.nmkey.outputs.key
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            MyCopilotApp/node_modules
+            autorecorder/node_modules
+          key: ${{ steps.nmkey.outputs.key }}
+      # APK key = native inputs only: android/ sources (no build output), app.json, and the autolinked
+      # native packages (every node_modules package with an android/ dir) with their versions.
+      # A JS-only bump no longer rebuilds the APK.
+      - name: List native packages (APK cache key)
+        run: |
+          cd MyCopilotApp
+          for d in node_modules/*/android node_modules/@*/*/android; do
+            [ -d "$d" ] || continue
+            pkg=${d%/android}
+            node -e "const p=require('./$pkg/package.json');console.log(p.name+'@'+p.version)"
+          done | LC_ALL=C sort -u > ../native-deps.txt
+          wc -l ../native-deps.txt
       - name: Cache built APK
         id: apk-cache
         uses: actions/cache@v4
         with:
           path: MyCopilotApp/android/app/build/outputs/apk/debug/app-debug.apk
-          key: apk-x86_64-v1-${{ hashFiles('MyCopilotApp/android/**', 'MyCopilotApp/package.json', 'MyCopilotApp/package-lock.json', 'MyCopilotApp/babel.config.js', 'MyCopilotApp/app.json') }}
-      - uses: actions/setup-node@v4
-        if: steps.apk-cache.outputs.cache-hit != 'true'
-        with:
-          node-version: ${{ env.NODE_VERSION }}
+          key: apk-x86_64-v2-${{ hashFiles('MyCopilotApp/android/**', '!MyCopilotApp/android/**/build/**', '!MyCopilotApp/android/.gradle/**', '!MyCopilotApp/android/**/.cxx/**', 'MyCopilotApp/app.json', 'native-deps.txt') }}
       - uses: actions/setup-java@v4
         if: steps.apk-cache.outputs.cache-hit != 'true'
         with:
@@ -300,34 +348,17 @@ jobs:
         if: steps.apk-cache.outputs.cache-hit != 'true'
         with:
           packages: 'platform-tools platforms;android-37.0 build-tools;37.0.0 ndk;28.2.13676358 ndk;27.1.12297006'
-      # Keyed on the COMMITTED lockfile (stable) with restore-keys; npm install then applies today's
-      # resolved lockfile on top, so the installed versions are the same as a fresh npm ci.
-      - name: Cache MyCopilotApp node_modules
+      - name: Setup Gradle (caches + build cache)
         if: steps.apk-cache.outputs.cache-hit != 'true'
-        uses: actions/cache@v4
-        with:
-          path: MyCopilotApp/node_modules
-          key: nm-app-${{ runner.os }}-node${{ env.NODE_VERSION }}-v2-${{ steps.lockhash.outputs.app }}
-          restore-keys: nm-app-${{ runner.os }}-node${{ env.NODE_VERSION }}-v2-
-      - name: Install app dependencies
-        if: steps.apk-cache.outputs.cache-hit != 'true'
-        run: npm install --prefix MyCopilotApp --no-audit --no-fund
-      - name: Cache Gradle
-        if: steps.apk-cache.outputs.cache-hit != 'true'
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-v1-${{ hashFiles('MyCopilotApp/android/**/*.gradle*', 'MyCopilotApp/android/gradle/wrapper/gradle-wrapper.properties', 'MyCopilotApp/package-lock.json') }}
-          restore-keys: gradle-${{ runner.os }}-v1-
+        uses: gradle/actions/setup-gradle@v4
       - name: assembleDebug (x86_64, as in gradle.properties)
         if: steps.apk-cache.outputs.cache-hit != 'true'
         working-directory: MyCopilotApp/android
         run: |
           chmod +x gradlew
           set -o pipefail
-          ./gradlew assembleDebug --no-daemon --stacktrace -PreactNativeArchitectures=x86_64 2>&1 | tee ../../gradle.log
+          # CI only: 4 workers + build cache (the committed gradle.properties keeps workers.max=1 for local RAM).
+          ./gradlew assembleDebug --stacktrace -Dorg.gradle.workers.max=4 --build-cache -PreactNativeArchitectures=x86_64 2>&1 | tee ../../gradle.log
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
@@ -343,7 +374,7 @@ jobs:
           retention-days: 7
 
   record:
-    name: Record ${{ matrix.shard }}
+    name: ${{ inputs.mode == 'probe' && 'Probe' || 'Record' }} ${{ matrix.shard }}
     needs: [plan, build]
     if: contains(needs.plan.outputs.matrix, '"pages"') && needs.build.result == 'success'
     runs-on: ubuntu-latest
@@ -357,11 +388,9 @@ jobs:
       ANTHROPIC_MODEL: claude-opus-4-8
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       CPK_INTELLIGENCE_API_KEY: ${{ secrets.CPK_INTELLIGENCE_API_KEY }}
+      MODE: ${{ inputs.mode || 'record' }}
     steps:
       - uses: actions/checkout@v4
-      - name: Hash of the committed lockfiles (node_modules cache key)
-        id: lockhash
-        run: echo "rec=$(cat MyCopilotApp/package-lock.json autorecorder/package-lock.json | sha256sum | cut -c1-16)" >> "$GITHUB_OUTPUT"
       - name: Today's lockfiles from the plan job
         uses: actions/download-artifact@v4
         continue-on-error: true
@@ -392,25 +421,29 @@ jobs:
           UV_PYTHON_DOWNLOADS: never
         run: cd backend && uv sync --python "$(command -v python3.13 || command -v python3)"
 
-      - name: Cache node_modules + Playwright browser
+      - name: Restore node_modules (saved by the build job, exact key)
         id: nm-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: |
             MyCopilotApp/node_modules
             autorecorder/node_modules
-            ~/.cache/ms-playwright
-          # Stable key on the COMMITTED lockfiles (the resolved one changes daily, so the old key never hit).
-          key: nm-rec-${{ runner.os }}-node${{ env.NODE_VERSION }}-v2-${{ steps.lockhash.outputs.rec }}
-          restore-keys: nm-rec-${{ runner.os }}-node${{ env.NODE_VERSION }}-v2-
+          key: ${{ needs.build.outputs.nmkey }}
+      - name: Cache Playwright browser
+        if: env.MODE != 'probe'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ hashFiles('autorecorder/package-lock.json') }}
       - name: Install dependencies
         timeout-minutes: 25
         run: |
           set -euo pipefail
           for d in MyCopilotApp autorecorder; do
-            # npm install on top of the cached tree applies today's lockfile (same versions as npm ci, faster).
+            # no-op on an exact cache hit; installs from today's lockfile on a miss.
             npm install --prefix "$d" --no-audit --no-fund
           done
+          [ "$MODE" = "probe" ] && exit 0
           echo 'Acquire::Retries "3"; Acquire::http::Timeout "30"; Acquire::https::Timeout "30";' | sudo tee /etc/apt/apt.conf.d/99net-timeouts > /dev/null
           # Doc tour / IDE / Notepad are filmed in Chromium (as in the React recorder); the device via adb.
           for i in 1 2 3; do (cd autorecorder && timeout 300 npx playwright install --with-deps chromium) && break; echo "playwright install attempt $i failed; retrying"; sleep 10; done
@@ -468,7 +501,8 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-api${{ env.ANDROID_API }}-google_apis-x86_64-ram4096-v1
+            /usr/local/lib/android/sdk/system-images/android-${{ env.ANDROID_API }}/google_apis/x86_64
+          key: avd-api${{ env.ANDROID_API }}-google_apis-x86_64-sysimg-ram4096-v2
       - name: Create AVD snapshot (cache miss only)
         if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
@@ -483,7 +517,7 @@ jobs:
           emulator-boot-timeout: 900
           script: echo "Generated AVD snapshot for caching."
 
-      - name: Record on the emulator
+      - name: ${{ inputs.mode == 'probe' && 'Probe' || 'Record' }} on the emulator
         id: rec
         uses: reactivecircus/android-emulator-runner@v2
         env:
@@ -500,17 +534,17 @@ jobs:
           script: bash tools/ci/emulator-record.sh
 
       - uses: actions/setup-python@v5
-        if: always()
+        if: always() && env.MODE != 'probe'
         with:
           python-version: '3.12'
       - name: Cache static ffmpeg
-        if: always()
+        if: always() && env.MODE != 'probe'
         uses: actions/cache@v4
         with:
           path: ~/ffmpeg-static
           key: ffmpeg-static-linux64-v1
       - name: Clip checks for this shard (the report job reuses them)
-        if: always()
+        if: always() && env.MODE != 'probe'
         run: |
           set +e
           if [ ! -x ~/ffmpeg-static/ffmpeg ]; then
@@ -522,8 +556,17 @@ jobs:
           python .qa/tools/ci_post.py --checks-only --videos autorecorder/videos --out out/run || echo "::warning::shard checks failed; the report job checks these clips itself"
           exit 0
 
+      - name: Upload probe shard (temporary)
+        if: always() && env.MODE == 'probe'
+        uses: actions/upload-artifact@v4
+        with:
+          name: shard-${{ matrix.shard }}
+          path: out/probe/
+          if-no-files-found: ignore
+          retention-days: 1
+
       - name: Upload shard (temporary)
-        if: always()
+        if: always() && env.MODE != 'probe'
         uses: actions/upload-artifact@v4
         with:
           name: shard-${{ matrix.shard }}
@@ -539,21 +582,45 @@ jobs:
     if: always() && needs.plan.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    env:
+      MODE: ${{ inputs.mode || 'record' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Probe shards (probe mode)
+        if: env.MODE == 'probe'
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: shard-*
+          path: shards
+      - name: Write probe-summary.md
+        if: env.MODE == 'probe'
+        run: python3 tools/ci/probe-summary.py shards out/probe-run "${{ needs.plan.outputs.date }}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload probe-${{ needs.plan.outputs.date }}
+        if: always() && env.MODE == 'probe'
+        uses: actions/upload-artifact@v4
+        with:
+          name: probe-${{ needs.plan.outputs.date }}
+          path: out/probe-run/
+          if-no-files-found: warn
+          retention-days: 14
       - uses: actions/setup-node@v4
+        if: env.MODE != 'probe'
         with:
           node-version: ${{ env.NODE_VERSION }}
       - uses: actions/setup-python@v5
+        if: env.MODE != 'probe'
         with:
           python-version: '3.12'
       - name: Cache static ffmpeg
+        if: env.MODE != 'probe'
         id: ffmpeg-cache
         uses: actions/cache@v4
         with:
           path: ~/ffmpeg-static
           key: ffmpeg-static-linux64-v1
       - name: Install ffmpeg (static build, cached) + numpy
+        if: env.MODE != 'probe'
         run: |
           set -euo pipefail
           if [ ! -x ~/ffmpeg-static/ffmpeg ]; then
@@ -566,6 +633,7 @@ jobs:
           ~/ffmpeg-static/ffmpeg -version | head -1
 
       - name: Drift and versions from the plan job
+        if: env.MODE != 'probe'
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
@@ -573,11 +641,13 @@ jobs:
           path: out/run
 
       - uses: actions/download-artifact@v4
+        if: env.MODE != 'probe'
         with:
           pattern: shard-*
           path: shards
 
       - name: Merge shards
+        if: env.MODE != 'probe'
         run: |
           set -euo pipefail
           mkdir -p autorecorder/videos out/run/logs
@@ -605,12 +675,14 @@ jobs:
           PY
 
       - name: Restore earlier page durations
+        if: env.MODE != 'probe'
         uses: actions/cache/restore@v4
         with:
           path: page-durations.json
           key: page-durations-${{ github.run_id }}
           restore-keys: page-durations-
       - name: Update page durations (recording seconds per page, for the next run's shard balancing)
+        if: env.MODE != 'probe'
         run: |
           python - <<'PY'
           import json
@@ -625,26 +697,28 @@ jobs:
           print(f"{len(d)} page durations")
           PY
       - name: Save page durations
+        if: env.MODE != 'probe'
         uses: actions/cache/save@v4
         with:
           path: page-durations.json
           key: page-durations-${{ github.run_id }}
 
       - name: Narration fit/mix + clip checks + summary
+        if: env.MODE != 'probe'
         run: |
           python .qa/tools/ci_post.py --videos autorecorder/videos --out out/run \
             --drift out/run/drift/drift.md --versions out/run/versions.md --title "${{ github.event.repository.name }} ${{ needs.plan.outputs.date }}"
           cat out/run/summary.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Assemble run folder
-        if: always()
+        if: always() && env.MODE != 'probe'
         run: |
           mkdir -p out/run/videos
           [ -d autorecorder/videos ] && cp -r autorecorder/videos/. out/run/videos/ || true
           du -sh out/run || true
 
       - name: Upload run-${{ needs.plan.outputs.date }}
-        if: always()
+        if: always() && env.MODE != 'probe'
         uses: actions/upload-artifact@v4
         with:
           name: run-${{ needs.plan.outputs.date }}

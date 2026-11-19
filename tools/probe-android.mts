@@ -79,6 +79,7 @@ async function probe(id: string) {
       tap(input); await sleep(500); typeText(prompt); step(`typed: ${prompt}`);
       await sleep(500);
       const cur = dump();
+      res.textsBeforeSend = texts(cur.nodes);
       const btn = cur.nodes.find((n) => (n.text || n.desc).trim().toLowerCase() === tapLabel!.toLowerCase());
       if (btn) { tap(btn); step(`tapped "${tapLabel}"`); }
       else { sh("input keyevent 66"); step(`no "${tapLabel}" button, pressed Enter`); }

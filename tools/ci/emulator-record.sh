@@ -37,6 +37,22 @@ for i in $(seq 1 15); do
 done
 adb logcat -v time > logs/logcat.log 2>&1 &
 node autorecorder/scripts/write-versions.mjs 2>/dev/null || echo "::warning::write-versions failed or missing"
+if [ "${MODE:-record}" = "probe" ]; then
+  # Probe mode (WORKFLOW.md B1): 3 runs per page, prompts from tools/probe-prompts.json.
+  # probe-android.mts writes out/probe/<id>/ fresh each call, so each run is moved to run<N>.
+  IDS=$(echo "$PAGES" | tr ',' ' ')
+  TSX=autorecorder/node_modules/.bin/tsx
+  [ -x "$TSX" ] || TSX="npx -y tsx"
+  mkdir -p out/probe-runs
+  for r in 1 2 3; do
+    for id in $IDS; do
+      $TSX tools/probe-android.mts "$id" 2>&1 | tee -a logs/probe.log
+      if [ -d "out/probe/$id" ]; then mkdir -p "out/probe-runs/$id"; rm -rf "out/probe-runs/$id/run$r"; mv "out/probe/$id" "out/probe-runs/$id/run$r"; fi
+    done
+  done
+  rm -rf out/probe && mv out/probe-runs out/probe
+  exit 0
+fi
 cd autorecorder
 xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" \
   npm run record -- "--pages=$PAGES" 2>&1 | tee ../logs/record.log
