@@ -86,6 +86,7 @@ PY
   exit 0
 fi
 cd autorecorder
+export FRONTEND_URL=http://localhost:8179  # HARNESS: device mirror off Metro's :8170 (EADDRINUSE in CI)
 xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" \
   npm run record -- "--pages=$PAGES" 2>&1 | tee ../logs/record.log
 echo "record exit=${PIPESTATUS[0]}"
