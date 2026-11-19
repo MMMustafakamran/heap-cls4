@@ -1,0 +1,9 @@
+{
+ "text": "Moving on to the demo. Asked for the weather, it should show the weather card, and it only does that with my own code added.",
+ "model": "s2.1-pro-free",
+ "refSha256": "2c9d0ecf4608feacc07c88e869cd4dec601481306a939b7be92fc1bff521a727",
+ "duration": 8.266,
+ "file": "ddbb98c520f6ca99ecd2213ce2995c4e.mp3",
+ "clip": "CLAUDESDK-rn-09-ToolCallRendering",
+ "at": "demo"
+}

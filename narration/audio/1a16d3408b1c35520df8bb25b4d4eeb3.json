@@ -1,0 +1,9 @@
+{
+ "text": "So basically, the agent is three fragments of a loop that's never shown, with undefined helpers and no install, so you can't run it as written.",
+ "model": "s2.1-pro-free",
+ "refSha256": "2c9d0ecf4608feacc07c88e869cd4dec601481306a939b7be92fc1bff521a727",
+ "duration": 10.542,
+ "file": "1a16d3408b1c35520df8bb25b4d4eeb3.mp3",
+ "clip": "CLAUDESDK-rn-10-SharedState",
+ "at": "notepad"
+}

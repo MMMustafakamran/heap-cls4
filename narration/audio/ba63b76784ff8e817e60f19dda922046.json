@@ -1,0 +1,9 @@
+{
+ "text": "So this is the problem, the backend is just this system prompt, uh, no agent and no server around it.",
+ "model": "s2.1-pro-free",
+ "refSha256": "2c9d0ecf4608feacc07c88e869cd4dec601481306a939b7be92fc1bff521a727",
+ "duration": 7.895,
+ "file": "ba63b76784ff8e817e60f19dda922046.mp3",
+ "clip": "CLAUDESDK-rn-14-PausingTheAgentForInput",
+ "at": "evidence"
+}

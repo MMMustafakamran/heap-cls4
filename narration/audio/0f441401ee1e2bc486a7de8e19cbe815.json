@@ -1,0 +1,9 @@
+{
+ "text": "Moving on to the demo. Tapping a slot should get a confirmation from the agent, umm, and that's only possible with my own agent.",
+ "model": "s2.1-pro-free",
+ "refSha256": "2c9d0ecf4608feacc07c88e869cd4dec601481306a939b7be92fc1bff521a727",
+ "duration": 9.056,
+ "file": "0f441401ee1e2bc486a7de8e19cbe815.mp3",
+ "clip": "CLAUDESDK-rn-13-HitlOverview",
+ "at": "demo"
+}

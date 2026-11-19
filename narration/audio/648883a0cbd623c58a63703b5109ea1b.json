@@ -1,0 +1,9 @@
+{
+ "text": "So this is the problem, the agent code here is LangGraph, umm, not Claude Agent SDK.",
+ "model": "s2.1-pro-free",
+ "refSha256": "2c9d0ecf4608feacc07c88e869cd4dec601481306a939b7be92fc1bff521a727",
+ "duration": 8.081,
+ "file": "648883a0cbd623c58a63703b5109ea1b.mp3",
+ "clip": "CLAUDESDK-rn-16-GovernedActionApprovalUi",
+ "at": "evidence"
+}

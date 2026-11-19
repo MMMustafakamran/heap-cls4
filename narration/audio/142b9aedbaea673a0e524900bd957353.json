@@ -1,0 +1,9 @@
+{
+ "text": "So this is the problem, this snippet is a web page file with a different agent and tool name, and there's no Claude agent at all.",
+ "model": "s2.1-pro-free",
+ "refSha256": "2c9d0ecf4608feacc07c88e869cd4dec601481306a939b7be92fc1bff521a727",
+ "duration": 9.056,
+ "file": "142b9aedbaea673a0e524900bd957353.mp3",
+ "clip": "CLAUDESDK-rn-13-HitlOverview",
+ "at": "evidence"
+}

@@ -1,0 +1,9 @@
+{
+ "text": "Moving on to the demo. Picking tomorrow at nine should continue the run, and that only works on my own adapter.",
+ "model": "s2.1-pro-free",
+ "refSha256": "2c9d0ecf4608feacc07c88e869cd4dec601481306a939b7be92fc1bff521a727",
+ "duration": 7.43,
+ "file": "5acb65e883bc5357c01ba3afdd2b7a52.mp3",
+ "clip": "CLAUDESDK-rn-14-PausingTheAgentForInput",
+ "at": "demo"
+}

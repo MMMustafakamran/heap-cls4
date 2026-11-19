@@ -102,7 +102,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [
         "Issue: the Claude Agent SDK quickstart only registers a built-in OpenAI agent; it never shows a Claude agent, its install or how to connect it."
       ],
@@ -154,7 +154,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [
         "Note: same native peers / Bundle Mode setup gap as Prebuilt Components."
       ],
@@ -177,7 +177,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [],
       "links": []
     },
@@ -200,7 +200,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [
         "Issue: the quick start has no message list (just a placeholder comment), so the agent's answer never shows."
       ],
@@ -249,7 +249,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [
         "Note: overview page, no code to run."
       ],
@@ -327,7 +327,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [
         "Issue: the agent is three fragments of a Messages API loop; run_shared_state_read_write_agent, normalize_claude_model and DEFAULT_ANTHROPIC_MODEL are never shown."
       ],
@@ -389,7 +389,7 @@
       "child": false,
       "docPath": "human-in-the-loop",
       "reachable": "sidebar",
-      "status": "❌",
+      "status": "✅",
       "findings": [
         11
       ],
@@ -402,7 +402,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Issue: no Claude agent on the page, and the first snippet is a web page.tsx excerpt (agentId hitl-in-chat, book_call) that doesn't match the React Native code."
+        "Note: no backend on the page beyond the frontend tool (the quickstart-style ClaudeAgentAdapter forwards it), and the first page.tsx snippet is a web excerpt (hitl-in-chat, book_call) that doesn't match the RN code."
       ],
       "links": []
     },
@@ -414,7 +414,7 @@
       "child": true,
       "docPath": "human-in-the-loop/useInterrupt",
       "reachable": "sidebar",
-      "status": "❌",
+      "status": "✅",
       "findings": [
         12
       ],
@@ -427,7 +427,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Issue: the backend is only a SYSTEM_PROMPT (dedent never imported), no agent or server to run it."
+        "Note: the backend is only a SYSTEM_PROMPT (dedent not imported); it goes into the quickstart-style ClaudeAgentAdapter, the picker itself is a frontend tool."
       ],
       "links": []
     },
@@ -450,7 +450,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [
         "Note: the code imports `./src/ChatScreen`, which the page never shows."
       ],
@@ -464,7 +464,7 @@
       "child": true,
       "docPath": "human-in-the-loop/governed-actions",
       "reachable": "sidebar",
-      "status": "❌",
+      "status": "✅",
       "findings": [
         14
       ],
@@ -477,7 +477,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Issue: the only agent code is LangGraph (`interrupt()`, `deliver_email` undefined); there is no Claude Agent SDK agent."
+        "Note: the useInterrupt agent example is LangGraph only; the useHumanInTheLoop tool-call pattern on the same page works with the plain Claude adapter."
       ],
       "links": []
     },
@@ -500,7 +500,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [
         "Note: the page says WebMCP registration is a no-op on React Native."
       ],
@@ -525,7 +525,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [
         "Issue: no frontend code for the delegation log, and the supervisor loop that records delegations is never shown."
       ],
@@ -548,7 +548,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [
         "Note: the page says there is no React Native build of Inspector."
       ],
@@ -561,7 +561,7 @@
       "group": "Generative UI",
       "child": true,
       "docPath": "generative-ui/state-rendering",
-      "reachable": "in-content",
+      "reachable": "sidebar",
       "linkedFrom": "generative-ui",
       "status": "❌",
       "findings": [
@@ -587,7 +587,7 @@
       "group": "Shared state",
       "child": true,
       "docPath": "shared-state/streaming",
-      "reachable": "in-content",
+      "reachable": "sidebar",
       "linkedFrom": "shared-state, shared-state/rendering-in-app, shared-state/agent-readonly, multi-agent/subagents",
       "status": "❌",
       "findings": [
@@ -600,7 +600,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [
         "Issue: only a branch 'inside the streamed tool-argument handler' and a helper are shown; the handler, loop and tool wiring are missing."
       ],
@@ -652,7 +652,7 @@
         "by": null
       },
       "added": "2026-11-19",
-      "probe": "pending",
+      "probe": "ci 44525111432 3/3",
       "notes": [
         "Issue: no React Native frontend code, and the page names three different config channels (shared state, forwarded_props, useAgentContext)."
       ],

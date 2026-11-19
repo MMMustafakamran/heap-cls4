@@ -1,0 +1,9 @@
+{
+ "text": "Moving on to the demo. The document should stream into the view, and that only happens with my own handler.",
+ "model": "s2.1-pro-free",
+ "refSha256": "2c9d0ecf4608feacc07c88e869cd4dec601481306a939b7be92fc1bff521a727",
+ "duration": 7.941,
+ "file": "e318c5c8a3325e62c130e83a34ec7bb7.mp3",
+ "clip": "CLAUDESDK-rn-21-StateStreaming",
+ "at": "demo"
+}

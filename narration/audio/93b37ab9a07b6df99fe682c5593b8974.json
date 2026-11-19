@@ -1,0 +1,9 @@
+{
+ "text": "So this is the problem, it says config comes from shared state, umm, but the code reads something else and there's no React Native code.",
+ "model": "s2.1-pro-free",
+ "refSha256": "2c9d0ecf4608feacc07c88e869cd4dec601481306a939b7be92fc1bff521a727",
+ "duration": 8.499,
+ "file": "93b37ab9a07b6df99fe682c5593b8974.mp3",
+ "clip": "CLAUDESDK-rn-23-AgentConfig",
+ "at": "evidence"
+}

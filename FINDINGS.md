@@ -28,7 +28,7 @@ Stack: @copilotkit/react-native 1.89.0 (declared ^1.89.0), @copilotkit/runtime 1
 
 **#5 The quick start has no place for the answer.**
 - **Doc:** `<CopilotChat agentId="default" attachments={{ enabled: true }}>` with `{/* Your message list goes here. */}`.
-- **Result (expected from the identical Antigravity RN page):** a red LogBox "Text strings must be rendered within a <Text> component." on load; no message list, so the agent's answer never shows on screen.
+- **Error (CI probe 2026-11-19, 3/3):** `E/ReactNativeJS: Text strings must be rendered within a <Text> component.`; after sending, nothing shows: there is no message list, so the agent's answer never appears on screen.
 - Minor: the install step is `npx expo install expo-document-picker expo-file-system`, Expo-only, while the quickstart builds a bare React Native CLI app.
 
 ### [Frontend Tools](https://docs.copilotkit.ai/react-native/claude-sdk-python/frontend-tools)
@@ -68,20 +68,13 @@ Stack: @copilotkit/react-native 1.89.0 (declared ^1.89.0), @copilotkit/runtime 1
 
 ### [HITL Overview](https://docs.copilotkit.ai/react-native/claude-sdk-python/human-in-the-loop)
 
-**Dev blockers**
-
-**#11 No Claude agent, and the first snippet is a web excerpt that doesn't match the React Native code.**
-- **Doc:** `page.tsx - useHumanInTheLoop` with `agentId: "hitl-in-chat",` / `name: "book_call"` / `TimePickerCard` (web JSX, undefined), then `src/MeetingApproval.tsx` registering `schedule_meeting`; "Tap a slot, and the agent confirms the time you picked."
-- **Result (expected):** a reader gets no agent to run. The Antigravity RN page with the same frontend never completed after a slot tap (card stays open, no confirmation); to check on probe.
+**Minor notes**
+- #11 No backend shown beyond the frontend tool (fine on the quickstart-style `ClaudeAgentAdapter`), and the first snippet is a web `page.tsx` excerpt (`agentId: "hitl-in-chat"`, `book_call`, undefined `TimePickerCard`) that doesn't match the React Native `schedule_meeting` code. Not probed yet.
 
 ### [Pausing the Agent for Input](https://docs.copilotkit.ai/react-native/claude-sdk-python/human-in-the-loop/useInterrupt)
 
-**Dev blockers**
-
-**#12 The backend is only a system prompt.**
-- **Doc:** `interrupt_agent.py`: `SYSTEM_PROMPT = dedent("""...""")`, nothing else; "Tap **Tomorrow at 09:00**, and the agent continues with your choice."
-- **Error (expected):** `NameError: dedent` (never imported); no agent, adapter or server to put the prompt in.
-- **Confirmed by harness:** `backend/agents/use_interrupt.py` adds the `dedent` import and the quickstart-style `ClaudeAgentAdapter` (HARNESS). The Antigravity RN picker never resumed; to check on probe.
+**Minor notes**
+- #12 The backend is only `SYSTEM_PROMPT = dedent(...)` with `dedent` not imported; the reader drops it into the quickstart-style `ClaudeAgentAdapter` (the picker is a frontend tool via `useHumanInTheLoop`). Not probed yet.
 
 ### [Headless Interrupts](https://docs.copilotkit.ai/react-native/claude-sdk-python/human-in-the-loop/headless)
 
@@ -90,12 +83,8 @@ Stack: @copilotkit/react-native 1.89.0 (declared ^1.89.0), @copilotkit/runtime 1
 
 ### [Governed Action Approval UI](https://docs.copilotkit.ai/react-native/claude-sdk-python/human-in-the-loop/governed-actions)
 
-**Dev blockers**
-
-**#14 The only agent is LangGraph; there is no Claude Agent SDK agent.**
-- **Doc:** "In a LangGraph Python agent, the tool calls `interrupt()`…" plus `from langgraph.types import interrupt` (`deliver_email` undefined).
-- **Result:** a Claude Agent SDK reader gets no agent to run and has to write one.
-- **Confirmed by harness:** `backend/agents/governed_actions.py` keeps the LangGraph code as text and serves the quickstart-style adapter (HARNESS), so only the `useHumanInTheLoop` half can be tried.
+**Minor notes**
+- #14 The `useInterrupt` agent example is LangGraph only (`from langgraph.types import interrupt`, `deliver_email` undefined); the page's `useHumanInTheLoop` tool-call pattern works with the plain Claude adapter. Not probed yet.
 
 ### [WebMCP](https://docs.copilotkit.ai/react-native/claude-sdk-python/webmcp)
 

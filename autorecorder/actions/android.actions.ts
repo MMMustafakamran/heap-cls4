@@ -44,18 +44,6 @@ but the agent code is three chunks of a messages api loop thats never shown
 run shared state read write agent, normalize claude model, default anthropic model all undefined
 no imports no install, cant run it as written
 wrote the whole loop myself`,
-  hitl: `page says tap a slot and the agent confirms the time u picked
-but theres no claude agent on the page at all
-and the first snippet is a web page.tsx with book_call and hitl in chat,doesnt match the rn code
-had to use my own adapter just to get the card`,
-  'use-interrupt': `page says tap tomorrow at 09 00 and the agent continues with ur choice
-but the backend is just a system prompt with dedent,dedent never imported
-no agent no adapter no server to put that prompt in
-had to wrap it in my own claude adapter`,
-  'governed-actions': `page says tap reject and the agent replies it didnt send the email
-but the only agent code is langgraph,interrupt and deliver_email
-nothing for claude agent sdk so u have to write the whole agent urself
-my own adapter only covers the approval card half`,
   subagents: `page says the delegation log renders live as the supervisor calls sub agents
 but theres no react native code for the log, just one sentence
 and the supervisor loop that writes delegations is never shown,only helper pieces
@@ -89,15 +77,6 @@ export const FINDING_EVIDENCE: Record<string, DocEvidence[]> = {
   ],
   'shared-state': [
     { text: 'async for chunk in run_shared_state_read_write_agent(input_data):', caption: 'Runner never shown (FINDINGS.md #9)' },
-  ],
-  hitl: [
-    { text: 'agentId: "hitl-in-chat",', caption: 'Web page.tsx excerpt on an RN page; no Claude agent (FINDINGS.md #11)' },
-  ],
-  'use-interrupt': [
-    { text: 'SYSTEM_PROMPT = dedent("""', caption: 'Backend is only a prompt (FINDINGS.md #12)' },
-  ],
-  'governed-actions': [
-    { text: 'In a LangGraph Python agent, the tool calls', caption: 'LangGraph-only agent (FINDINGS.md #14)' },
   ],
   subagents: [
     { text: 'On the frontend, the delegation log is a reactive render of the', caption: 'No frontend code for the log (FINDINGS.md #16)' },
