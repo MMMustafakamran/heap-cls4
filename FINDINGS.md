@@ -24,12 +24,8 @@ Stack: @copilotkit/react-native 1.89.0 (declared ^1.89.0), @copilotkit/runtime 1
 
 ### [Multimodal Attachments](https://docs.copilotkit.ai/react-native/claude-sdk-python/multimodal-attachments)
 
-**Dev blockers**
-
-**#5 The quick start has no place for the answer.**
-- **Doc:** `<CopilotChat agentId="default" attachments={{ enabled: true }}>` with `{/* Your message list goes here. */}`.
-- **Error (CI probe 2026-11-19, 3/3):** `E/ReactNativeJS: Text strings must be rendered within a <Text> component.`; after sending, nothing shows: there is no message list, so the agent's answer never appears on screen.
-- Minor: the install step is `npx expo install expo-document-picker expo-file-system`, Expo-only, while the quickstart builds a bare React Native CLI app.
+**Minor notes**
+- #5 The quick start leaves the message list as a placeholder (`{/* Your message list goes here. */}`, the page assumes your existing chat); the install step is Expo-only (`npx expo install expo-document-picker expo-file-system`) on a bare RN app. Harness adds the Headless UI page's message list.
 
 ### [Frontend Tools](https://docs.copilotkit.ai/react-native/claude-sdk-python/frontend-tools)
 

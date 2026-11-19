@@ -104,7 +104,7 @@
       "added": "2026-11-19",
       "probe": "ci 44525111432 3/3",
       "notes": [
-        "Issue: the Claude Agent SDK quickstart only registers a built-in OpenAI agent; it never shows a Claude agent, its install or how to connect it."
+        "Issue: no Claude agent, only a built-in OpenAI one."
       ],
       "links": [
         {
@@ -138,7 +138,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Note: no install command for the chat's native peers, and streamdown's Bundle Mode setup is only linked."
+        "Note: no install command for the chat's native packages."
       ],
       "links": [
         {
@@ -172,7 +172,7 @@
       "added": "2026-11-19",
       "probe": "ci 44525111432 3/3",
       "notes": [
-        "Note: same native peers / Bundle Mode setup gap as Prebuilt Components."
+        "Note: no install command for the chat's native packages."
       ],
       "links": [
         {
@@ -221,11 +221,8 @@
       "child": true,
       "docPath": "multimodal-attachments",
       "reachable": "sidebar",
-      "status": "❌",
-      "findings": [
-        5
-      ],
-      "block": null,
+      "status": "✅",
+      "findings": [],
       "review": {
         "verdict": null,
         "approvedAt": null,
@@ -234,17 +231,10 @@
       "added": "2026-11-19",
       "probe": "ci 44525111432 3/3",
       "notes": [
-        "Issue: the quick start has no message list (just a placeholder comment), so the agent's answer never shows."
+        "Note: message list is a placeholder; install step is Expo-only on a bare app."
       ],
-      "links": [
-        {
-          "text": "Issue",
-          "clip": "CLAUDESDK-rn-05-MultimodalAttachments",
-          "loom": "https://www.loom.com/share/f42f1625f6e4406799e531831cbc9a92",
-          "narration": "narration/scripts/CLAUDESDK-rn-05-MultimodalAttachments.json",
-          "filmed": "2026-11-19"
-        }
-      ]
+      "links": [],
+      "block": null
     },
     {
       "id": "frontend-tools",
@@ -268,7 +258,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Note: the agent step is only a _build_frontend_tools helper with no imports or loop; the ClaudeAgentAdapter it names is never shown."
+        "Note: the agent step is a helper only; no imports or loop shown."
       ],
       "links": [
         {
@@ -326,7 +316,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Note: same helper-only agent step as Frontend Tools; nothing tells Claude to call render_bar_chart."
+        "Note: helper-only agent step; nothing tells Claude to call the chart tool."
       ],
       "links": [
         {
@@ -360,7 +350,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Issue: the agent is two excerpts of a Claude Agent SDK adapter that calls about eight helpers and constants the page never defines."
+        "Issue: the agent code is fragments with undefined helpers; no weather card shows."
       ],
       "links": [
         {
@@ -393,7 +383,7 @@
       "added": "2026-11-19",
       "probe": "ci 44525111432 3/3",
       "notes": [
-        "Issue: the agent is three fragments of a Messages API loop; run_shared_state_read_write_agent, normalize_claude_model and DEFAULT_ANTHROPIC_MODEL are never shown."
+        "Issue: only fragments of the agent loop; the loop and client are never shown."
       ],
       "links": [
         {
@@ -426,7 +416,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Note: no backend code on the page; the board relies on whatever agent the reader already has."
+        "Note: no backend code on the page."
       ],
       "links": []
     },
@@ -482,7 +472,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Note: no backend on the page beyond the frontend tool (the quickstart-style ClaudeAgentAdapter forwards it), and the first page.tsx snippet is a web excerpt (hitl-in-chat, book_call) that doesn't match the RN code."
+        "Note: no backend shown, and the first snippet is web code."
       ],
       "links": [
         {
@@ -515,7 +505,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Note: the backend is only a SYSTEM_PROMPT (dedent not imported); it goes into the quickstart-style ClaudeAgentAdapter, the picker itself is a frontend tool."
+        "Note: the backend is only a system prompt."
       ],
       "links": [
         {
@@ -548,7 +538,7 @@
       "added": "2026-11-19",
       "probe": "ci 44525111432 3/3",
       "notes": [
-        "Note: the code imports `./src/ChatScreen`, which the page never shows."
+        "Note: the imported ChatScreen file is never shown."
       ],
       "links": [
         {
@@ -581,7 +571,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Note: the useInterrupt agent example is LangGraph only; the useHumanInTheLoop tool-call pattern on the same page works with the plain Claude adapter."
+        "Note: the interrupt agent example is LangGraph only."
       ],
       "links": [
         {
@@ -639,7 +629,7 @@
       "added": "2026-11-19",
       "probe": "ci 44525111432 3/3",
       "notes": [
-        "Issue: no frontend code for the delegation log, and the supervisor loop that records delegations is never shown."
+        "Issue: the supervisor loop is never shown."
       ],
       "links": [
         {
@@ -696,7 +686,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Issue: the agent writes notes/preferences but ResearchProgress reads status/draft/completed/total from an agent 'researcher' the page never registers, so the panel can't update."
+        "Issue: the agent and panel use different state, panel never updates."
       ],
       "links": [
         {
@@ -730,7 +720,7 @@
       "added": "2026-11-19",
       "probe": "ci 44525111432 3/3",
       "notes": [
-        "Issue: only a branch 'inside the streamed tool-argument handler' and a helper are shown; the handler, loop and tool wiring are missing."
+        "Issue: the agent code is fragments; the handler and loop are never shown."
       ],
       "links": [
         {
@@ -764,7 +754,7 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [
-        "Note: the backend step says to wrap Claude Agent SDK once but shows no code."
+        "Note: the backend step shows no code."
       ],
       "links": [
         {
@@ -798,7 +788,7 @@
       "added": "2026-11-19",
       "probe": "ci 44525111432 3/3",
       "notes": [
-        "Issue: no React Native frontend code, and the page names three different config channels (shared state, forwarded_props, useAgentContext)."
+        "Issue: no React Native frontend code, and three config channels named."
       ],
       "links": [
         {

@@ -30,10 +30,6 @@ but the runtime only registers a built in openai agent, model openai gpt 6 luna
 so the chat answers but its not claude at all
 no pip install for ag-ui claude sdk,no python server,nothing that hooks claude into the runtime
 had to guess the claude adapter backend and an httpagent from ag-ui client myself`,
-  'multimodal-attachments': `page says attach a photo ask a question and the agent answers about it
-but the quick start has no message list, just a comment saying ur list goes here
-so after sending nothing shows up,the answer never appears on screen
-and the install step is expo only while the quickstart is a plain react native cli app`,
   'tool-rendering': `page says the agent runs get_weather and the weather card renders in the chat
 but the agent is just two pieces of a claude sdk adapter file
 it calls normalize claude agent sdk model, build sdk tools, set state and more,none defined anywhere
@@ -70,9 +66,6 @@ export const FINDING_EVIDENCE: Record<string, DocEvidence[]> = {
   quickstart: [
     { text: 'model: "openai:gpt-6-luna",', caption: 'Only a built-in OpenAI agent; no Claude agent (FINDINGS.md #1)' },
   ],
-  'multimodal-attachments': [
-    { text: 'Your message list goes here', caption: 'No message list (FINDINGS.md #5)' },
-  ],
   'tool-rendering': [
     { text: '"model": _normalize_claude_agent_sdk_model(model),', caption: 'Adapter helpers never defined (FINDINGS.md #8)' },
   ],
@@ -103,9 +96,11 @@ const SEND_LABEL: Record<string, string> = {
 
 /** Steps after the reply settles: tap a node by its text, wait N seconds, or wait until a text shows up. */
 type ThenStep = { tap?: string; wait?: number; waitfor?: string; timeout?: number; /** device px: x1,y1,x2,y2 */ swipe?: [number, number, number, number];
-  /** HARNESS: press Back only while the soft keyboard is up (it covered the swipe area) */ hideKeyboard?: boolean };
+  /** HARNESS: press Back only while the soft keyboard is up (it covered the swipe area) */ hideKeyboard?: boolean;
+  /** drag the node with this text up to 20% of the screen height (e.g. a bottom sheet header); device-size independent */ dragUp?: string };
 type PromptCfg = { prompt?: string; tap?: string; settle?: number; timeout?: number; noInput?: boolean; then?: ThenStep[];
-  /** steps before typing (e.g. open a modal) */ before?: ThenStep[]; /** which text field is the chat composer */ input?: 'first' | 'last' };
+  /** steps before typing (e.g. open a modal) */ before?: ThenStep[]; /** which text field is the chat composer */ input?: 'first' | 'last';
+  /** HARNESS: the composer sits under the soft keyboard (page has no keyboard avoiding view): press Back before tapping Send */ hideKeyboardBeforeSend?: boolean };
 
 /** First node whose text/desc equals the label, else the first one containing it (case-insensitive). */
 function findText(nodes: UiNode[], label: string): UiNode | undefined {
@@ -135,6 +130,11 @@ async function runStep(page: Page, step: ThenStep, ctx: ActionContext): Promise<
   }
   if (step.hideKeyboard && /mInputShown=true/.test(sh('dumpsys input_method'))) { sh('input keyevent 4'); logAction('key', 'back (hide keyboard)'); await sleep(1000); }
   if (step.swipe) { const [a, b, c, d] = step.swipe; sh(`input swipe ${a} ${b} ${c} ${d} 600`); logAction('swipe', step.swipe.join(',')); await sleep(1500); }
+  if (step.dragUp) {
+    const nodes = dump().nodes; const n = byLabel(nodes, step.dragUp); const d = deviceSize(nodes);
+    if (n) { const [x, y] = center(n); sh(`input swipe ${x} ${y} ${x} ${Math.round(d.h * 0.2)} 800`); logAction('swipe', `${step.dragUp} up`); await sleep(2000); }
+    else ctx.warn(`No "${step.dragUp}" on screen to drag up`);
+  }
   if (step.wait) await sleep(step.wait * 1000);
 }
 /** tools/probe-prompts.json (main session keeps it), read per take so edits apply without a restart. */
@@ -228,6 +228,7 @@ export async function runAndroidChat(page: Page, config: PageRecordConfig, root:
         mark('action', `type: ${cfg.prompt}`);
         await typeHuman(cfg.prompt);
         await sleep(700);
+        if (cfg.hideKeyboardBeforeSend) await runStep(page, { hideKeyboard: true }, ctx);
         screen = dump();
         const label = cfg.tap!;
         const btn = byLabel(screen.nodes, label) ?? byLabel(screen.nodes, label === 'Send' ? '↑' : 'Send');
@@ -276,6 +277,7 @@ export async function runAndroidChat(page: Page, config: PageRecordConfig, root:
       if (!fresh.length && !red.length) ctx.fail('The agent never replied (screen unchanged after sending the prompt)');
     }
     await sleep(1500);
+    sh('input keyevent 3'); // HARNESS (recorder): go home so the next take's demo does not open on this page
     return finalTexts;
   });
 }

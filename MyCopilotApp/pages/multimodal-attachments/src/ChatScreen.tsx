@@ -1,6 +1,21 @@
 import { useState } from "react";
-import { Image, Pressable, Text, TextInput, View } from "react-native";
+import { FlatList, Image, Pressable, Text, TextInput, View } from "react-native"; // HARNESS: FlatList for the message list
+import { useAgent } from "@copilotkit/react-native/headless"; // HARNESS: message list
 import { CopilotChat, useCopilotChatContext } from "@copilotkit/react-native";
+import type { NativeFileInput } from "@copilotkit/react-native"; // HARNESS: the callout names it as a type export but shows no import
+// Doc callout "expo-file-system 19 and later: pass your own reader" (installed expo-file-system 58), verbatim:
+import * as FileSystem from "expo-file-system/legacy";
+
+const attachments = {
+  enabled: true,
+  onUpload: async (file: NativeFileInput) => ({
+    type: "data" as const,
+    value: await FileSystem.readAsStringAsync(file.uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    }),
+    mimeType: file.mimeType,
+  }),
+};
 
 function Composer() {
   const { attachments, openPicker, removeAttachment, submitMessage, isRunning } =
@@ -47,10 +62,41 @@ function Composer() {
   );
 }
 
-export function ChatScreen() {
+// HARNESS: page assumes your existing chat's message list (rows copied from the Headless UI page's ChatScreen)
+function MessageList() {
+  const { agent } = useAgent({ agentId: "default" });
+  const rows = agent.messages.filter(
+    (m) => (m.role === "user" || m.role === "assistant") && typeof m.content === "string" && m.content,
+  );
   return (
-    <CopilotChat agentId="default" attachments={{ enabled: true }}> {/* [!code highlight] */}
+    <FlatList
+      data={rows}
+      keyExtractor={(m) => m.id}
+      contentContainerStyle={{ padding: 12, gap: 8 }}
+      renderItem={({ item }) => (
+        <View
+          style={{
+            alignSelf: item.role === "user" ? "flex-end" : "flex-start",
+            backgroundColor: item.role === "user" ? "#4f46e5" : "#f1f1f4",
+            borderRadius: 16,
+            padding: 12,
+            maxWidth: "80%",
+          }}
+        >
+          <Text style={{ color: item.role === "user" ? "#fff" : "#111" }}>{item.content as string}</Text>
+        </View>
+      )}
+    />
+  );
+}
+
+export function ChatScreen() {
+  // Doc callout: "Pass this object as the attachments prop in the samples below"
+  return (
+    <CopilotChat agentId="default" attachments={attachments}>
       {/* Your message list goes here. */}
+      {/* HARNESS: page assumes your existing chat's message list */}
+      <MessageList />
       <Composer />
     </CopilotChat>
   );
