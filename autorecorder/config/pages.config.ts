@@ -162,8 +162,8 @@ export const PAGES = definePages([
       { filePath: 'MyCopilotApp/pages/tool-rendering/runtime.ts', startLine: 1, endLine: 14 },
       { filePath: 'MyCopilotApp/pages/tool-rendering/src/ToolCallCard.tsx', startLine: 1, endLine: 20 },
       { filePath: 'MyCopilotApp/pages/tool-rendering/src/WeatherCard.tsx', startLine: 1, endLine: 34 },
-      // HARNESS addition the finding is about: the tools, prompt and build import the page never shows
-      { filePath: 'backend/agents/rn_tool_rendering.py', startLine: 1, endLine: 40, addedText: 'from agents._common import build  # HARNESS: import never shown on the page' },
+      // HARNESS addition the finding is about (FINDINGS.md #8): imports and helpers the adapter excerpts never define
+      { filePath: 'backend/agents/tool_rendering.py', startLine: 1, endLine: 60, addedText: 'import asyncio  # HARNESS: missing import' },
     ],
     // Overridden per take by tools/probe-prompts.json when it has this page.
     prompt: "Say hello in one short sentence",
@@ -181,6 +181,8 @@ export const PAGES = definePages([
       { filePath: 'MyCopilotApp/pages/shared-state/runtime.ts', startLine: 1, endLine: 13 },
       { filePath: 'MyCopilotApp/pages/shared-state/src/LanguageButton.tsx', startLine: 1, endLine: 26 },
       { filePath: 'MyCopilotApp/pages/shared-state/src/NotesCard.tsx', startLine: 1, endLine: 36 },
+      // FINDINGS.md #9: the runner the page calls but never shows
+      { filePath: 'backend/agents/shared_state.py', startLine: 100, endLine: 140, addedText: 'async def run_shared_state_read_write_agent(input_data: RunAgentInput) -> AsyncIterator[str]:  # HARNESS: called by agent_server.py, never shown' },
     ],
     // Overridden per take by tools/probe-prompts.json when it has this page.
     prompt: "Say hello in one short sentence",
@@ -229,6 +231,8 @@ export const PAGES = definePages([
     extraTabs: [
       { filePath: 'MyCopilotApp/pages/hitl/runtime.ts', startLine: 1, endLine: 13 },
       { filePath: 'MyCopilotApp/pages/hitl/src/MeetingApproval.tsx', startLine: 1, endLine: 44 },
+      // FINDINGS.md #11: the page shows no Python agent at all
+      { filePath: 'backend/agents/hitl.py', startLine: 1, endLine: 18, addedText: 'adapter = ClaudeAgentAdapter(  # HARNESS: quickstart main.py adapter' },
     ],
     // Overridden per take by tools/probe-prompts.json when it has this page.
     prompt: "Say hello in one short sentence",
@@ -243,7 +247,8 @@ export const PAGES = definePages([
     startLine: 1,
     endLine: 13,
     extraTabs: [
-      { filePath: 'backend/agents/rn_use_interrupt.py', startLine: 1, endLine: 21, addedText: '# HARNESS: instructions written by the tester (page gives none).' },
+      // FINDINGS.md #12: the page's backend is only SYSTEM_PROMPT; dedent import and adapter are HARNESS
+      { filePath: 'backend/agents/use_interrupt.py', startLine: 1, endLine: 37, addedText: 'adapter = ClaudeAgentAdapter(  # HARNESS: quickstart main.py adapter, with the page's SYSTEM_PROMPT' },
       { filePath: 'MyCopilotApp/pages/use-interrupt/runtime.ts', startLine: 1, endLine: 13 },
       { filePath: 'MyCopilotApp/pages/use-interrupt/src/MeetingChat.tsx', startLine: 1, endLine: 25 },
     ],
@@ -277,7 +282,8 @@ export const PAGES = definePages([
     startLine: 1,
     endLine: 25,
     extraTabs: [
-      { filePath: 'backend/agents/rn_governed_actions.py', startLine: 1, endLine: 60, addedText: '# HARNESS: tester-written instructions (page gives no Antigravity agent).' },
+      // FINDINGS.md #14: page's agent is LangGraph; the served Claude adapter is HARNESS
+      { filePath: 'backend/agents/governed_actions.py', startLine: 1, endLine: 56, addedText: 'adapter = ClaudeAgentAdapter(  # HARNESS' },
       { filePath: 'MyCopilotApp/pages/governed-actions/runtime.ts', startLine: 1, endLine: 13 },
       { filePath: 'MyCopilotApp/pages/governed-actions/src/GovernedActionApproval.tsx', startLine: 1, endLine: 40 },
       { filePath: 'MyCopilotApp/pages/governed-actions/src/GovernedActionCard.tsx', startLine: 1, endLine: 56 },
@@ -311,7 +317,10 @@ export const PAGES = definePages([
     ideFile: 'MyCopilotApp/pages/subagents/App.tsx',
     startLine: 1,
     endLine: 34,
+    // FINDINGS.md #16: the delegation log is not on the page
+    addedText: '// HARNESS: not on the page (the reader must write their own delegation log)',
     extraTabs: [
+      { filePath: 'backend/agents/subagents.py', startLine: 1, endLine: 60, addedText: 'from agents._messages_loop import DEFAULT_ANTHROPIC_MODEL, normalize_claude_model, run_loop  # HARNESS: undefined on the page' },
       { filePath: 'MyCopilotApp/pages/subagents/runtime.ts', startLine: 1, endLine: 12 },
     ],
     // Overridden per take by tools/probe-prompts.json when it has this page.
@@ -331,5 +340,73 @@ export const PAGES = definePages([
     ],
     // Overridden per take by tools/probe-prompts.json when it has this page.
     prompt: "Say hello in one short sentence",
+  },
+  {
+    id: 'state-rendering',
+    name: "State Rendering",
+    videoName: 'StateRendering',
+    docPath: 'generative-ui/state-rendering',
+    route: '?page=state-rendering',
+    ideFile: 'MyCopilotApp/pages/state-rendering/App.tsx',
+    startLine: 1,
+    endLine: 19,
+    extraTabs: [
+      { filePath: 'MyCopilotApp/pages/state-rendering/runtime.ts', startLine: 1, endLine: 14 },
+      { filePath: 'MyCopilotApp/pages/state-rendering/src/ResearchProgress.tsx', startLine: 1, endLine: 30 },
+      // FINDINGS.md #17: runner and helpers never shown
+      { filePath: 'backend/agents/state_rendering.py', startLine: 120, endLine: 160, addedText: 'async def run_shared_state_read_write_agent(input_data: RunAgentInput) -> AsyncIterator[str]:  # HARNESS: never shown' },
+    ],
+    prompt: "Write a short report on solar power",
+  },
+  {
+    id: 'state-streaming',
+    name: "State Streaming",
+    videoName: 'StateStreaming',
+    docPath: 'shared-state/streaming',
+    route: '?page=state-streaming',
+    ideFile: 'MyCopilotApp/pages/state-streaming/App.tsx',
+    startLine: 1,
+    endLine: 20,
+    extraTabs: [
+      { filePath: 'MyCopilotApp/pages/state-streaming/runtime.ts', startLine: 1, endLine: 14 },
+      { filePath: 'MyCopilotApp/pages/state-streaming/src/DocumentView.tsx', startLine: 1, endLine: 20 },
+      // FINDINGS.md #18: the handler around the page's branch is HARNESS
+      { filePath: 'backend/agents/state_streaming.py', startLine: 115, endLine: 163, addedText: 'async def run_state_streaming(input_data: RunAgentInput) -> AsyncIterator[str]:  # HARNESS' },
+    ],
+    prompt: "Write a short poem about the sea",
+  },
+  {
+    id: 'programmatic-control',
+    name: "Programmatic Control",
+    videoName: 'ProgrammaticControl',
+    docPath: 'programmatic-control',
+    route: '?page=programmatic-control',
+    ideFile: 'MyCopilotApp/pages/programmatic-control/App.tsx',
+    startLine: 1,
+    endLine: 51,
+    extraTabs: [
+      { filePath: 'MyCopilotApp/pages/programmatic-control/runtime.ts', startLine: 1, endLine: 14 },
+      { filePath: 'MyCopilotApp/pages/programmatic-control/src/AgentTrigger.tsx', startLine: 1, endLine: 37 },
+      { filePath: 'MyCopilotApp/pages/programmatic-control/src/useMeetingRequest.ts', startLine: 1, endLine: 29 },
+    ],
+    prompt: "Summarize the latest sales data",
+  },
+  {
+    id: 'agent-config',
+    name: "Agent Config",
+    videoName: 'AgentConfig',
+    docPath: 'agent-config',
+    route: '?page=agent-config',
+    ideFile: 'MyCopilotApp/pages/agent-config/App.tsx',
+    startLine: 1,
+    endLine: 20,
+    // FINDINGS.md #20: no React Native frontend on the page
+    addedText: 'import { AgentConfigPanel } from "./src/AgentConfigPanel"; // HARNESS: not on the page',
+    extraTabs: [
+      { filePath: 'MyCopilotApp/pages/agent-config/runtime.ts', startLine: 1, endLine: 14 },
+      { filePath: 'MyCopilotApp/pages/agent-config/src/AgentConfigPanel.tsx', startLine: 1, endLine: 39 },
+      { filePath: 'backend/agents/agent_config.py', startLine: 1, endLine: 60 },
+    ],
+    prompt: "What is an API?",
   },
 ]);

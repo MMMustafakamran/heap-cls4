@@ -81,5 +81,582 @@
       ]
     }
   ],
-  "pages": []
+  "pages": [
+    {
+      "id": "quickstart",
+      "label": "React Native",
+      "kind": "quickstart",
+      "group": null,
+      "child": false,
+      "docPath": "",
+      "reachable": "sidebar",
+      "status": "❌",
+      "findings": [
+        1,
+        2
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Issue: the Claude Agent SDK quickstart only registers a built-in OpenAI agent; it never shows a Claude agent, its install or how to connect it."
+      ],
+      "links": []
+    },
+    {
+      "id": "prebuilt-components",
+      "label": "Prebuilt Components",
+      "kind": "guide",
+      "group": "Chat",
+      "child": true,
+      "docPath": "prebuilt-components",
+      "reachable": "sidebar",
+      "status": "✅",
+      "findings": [
+        3,
+        4
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Note: no install command for the chat's native peers, and streamdown's Bundle Mode setup is only linked."
+      ],
+      "links": []
+    },
+    {
+      "id": "markdown",
+      "label": "Markdown Rendering",
+      "kind": "guide",
+      "group": "Custom Look and Feel",
+      "child": true,
+      "docPath": "custom-look-and-feel/markdown",
+      "reachable": "sidebar",
+      "status": "✅",
+      "findings": [
+        3,
+        4
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Note: same native peers / Bundle Mode setup gap as Prebuilt Components."
+      ],
+      "links": []
+    },
+    {
+      "id": "headless-ui",
+      "label": "Headless UI",
+      "kind": "guide",
+      "group": "Custom Look and Feel",
+      "child": true,
+      "docPath": "custom-look-and-feel/headless-ui",
+      "reachable": "sidebar",
+      "status": "✅",
+      "findings": [],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [],
+      "links": []
+    },
+    {
+      "id": "multimodal-attachments",
+      "label": "Multimodal Attachments",
+      "kind": "guide",
+      "group": "Chat",
+      "child": true,
+      "docPath": "multimodal-attachments",
+      "reachable": "sidebar",
+      "status": "❌",
+      "findings": [
+        5
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Issue: the quick start has no message list (just a placeholder comment), so the agent's answer never shows."
+      ],
+      "links": []
+    },
+    {
+      "id": "frontend-tools",
+      "label": "Frontend Tools",
+      "kind": "guide",
+      "group": "Basics",
+      "child": false,
+      "docPath": "frontend-tools",
+      "reachable": "sidebar",
+      "status": "✅",
+      "findings": [
+        3,
+        6
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Note: the agent step is only a _build_frontend_tools helper with no imports or loop; the ClaudeAgentAdapter it names is never shown."
+      ],
+      "links": []
+    },
+    {
+      "id": "generative-ui",
+      "label": "Overview",
+      "kind": "guide",
+      "group": "Generative UI",
+      "child": false,
+      "docPath": "generative-ui",
+      "reachable": "sidebar",
+      "status": "N/A",
+      "findings": [],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Note: overview page, no code to run."
+      ],
+      "links": []
+    },
+    {
+      "id": "tool-based",
+      "label": "Components as Tools",
+      "kind": "guide",
+      "group": "Controlled",
+      "child": true,
+      "docPath": "generative-ui/tool-based",
+      "reachable": "sidebar",
+      "status": "✅",
+      "findings": [
+        3,
+        6,
+        7
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Note: same helper-only agent step as Frontend Tools; nothing tells Claude to call render_bar_chart."
+      ],
+      "links": []
+    },
+    {
+      "id": "tool-rendering",
+      "label": "Tool Call Rendering",
+      "kind": "guide",
+      "group": "Controlled",
+      "child": true,
+      "docPath": "generative-ui/tool-rendering",
+      "reachable": "sidebar",
+      "status": "❌",
+      "findings": [
+        3,
+        8
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Issue: the agent is two excerpts of a Claude Agent SDK adapter that calls about eight helpers and constants the page never defines."
+      ],
+      "links": []
+    },
+    {
+      "id": "shared-state",
+      "label": "Shared State",
+      "kind": "guide",
+      "group": "Shared state",
+      "child": false,
+      "docPath": "shared-state",
+      "reachable": "sidebar",
+      "status": "❌",
+      "findings": [
+        9
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Issue: the agent is three fragments of a Messages API loop; run_shared_state_read_write_agent, normalize_claude_model and DEFAULT_ANTHROPIC_MODEL are never shown."
+      ],
+      "links": []
+    },
+    {
+      "id": "shared-state-rendering",
+      "label": "Render agent state in your app",
+      "kind": "guide",
+      "group": "Shared state",
+      "child": true,
+      "docPath": "shared-state/rendering-in-app",
+      "reachable": "sidebar",
+      "status": "✅",
+      "findings": [
+        3
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Note: no backend code on the page; the board relies on whatever agent the reader already has."
+      ],
+      "links": []
+    },
+    {
+      "id": "agent-readonly",
+      "label": "Agent Read-Only Context",
+      "kind": "guide",
+      "group": "Shared state",
+      "child": true,
+      "docPath": "shared-state/agent-readonly",
+      "reachable": "sidebar",
+      "status": "✅",
+      "findings": [
+        10
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [],
+      "links": []
+    },
+    {
+      "id": "hitl",
+      "label": "HITL Overview",
+      "kind": "guide",
+      "group": "Human-in-the-loop",
+      "child": false,
+      "docPath": "human-in-the-loop",
+      "reachable": "sidebar",
+      "status": "❌",
+      "findings": [
+        11
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Issue: no Claude agent on the page, and the first snippet is a web page.tsx excerpt (agentId hitl-in-chat, book_call) that doesn't match the React Native code."
+      ],
+      "links": []
+    },
+    {
+      "id": "use-interrupt",
+      "label": "Pausing the Agent for Input",
+      "kind": "guide",
+      "group": "Human-in-the-loop",
+      "child": true,
+      "docPath": "human-in-the-loop/useInterrupt",
+      "reachable": "sidebar",
+      "status": "❌",
+      "findings": [
+        12
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Issue: the backend is only a SYSTEM_PROMPT (dedent never imported), no agent or server to run it."
+      ],
+      "links": []
+    },
+    {
+      "id": "hitl-headless",
+      "label": "Headless Interrupts",
+      "kind": "guide",
+      "group": "Human-in-the-loop",
+      "child": true,
+      "docPath": "human-in-the-loop/headless",
+      "reachable": "sidebar",
+      "status": "✅",
+      "findings": [
+        13
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Note: the code imports `./src/ChatScreen`, which the page never shows."
+      ],
+      "links": []
+    },
+    {
+      "id": "governed-actions",
+      "label": "Governed Action Approval UI",
+      "kind": "guide",
+      "group": "Human-in-the-loop",
+      "child": true,
+      "docPath": "human-in-the-loop/governed-actions",
+      "reachable": "sidebar",
+      "status": "❌",
+      "findings": [
+        14
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Issue: the only agent code is LangGraph (`interrupt()`, `deliver_email` undefined); there is no Claude Agent SDK agent."
+      ],
+      "links": []
+    },
+    {
+      "id": "webmcp",
+      "label": "WebMCP",
+      "kind": "guide",
+      "group": null,
+      "child": false,
+      "docPath": "webmcp",
+      "reachable": "sidebar",
+      "status": "N/A",
+      "findings": [
+        15
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Note: the page says WebMCP registration is a no-op on React Native."
+      ],
+      "links": []
+    },
+    {
+      "id": "subagents",
+      "label": "Sub-agents",
+      "kind": "guide",
+      "group": null,
+      "child": false,
+      "docPath": "multi-agent/subagents",
+      "reachable": "sidebar",
+      "status": "❌",
+      "findings": [
+        16
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Issue: no frontend code for the delegation log, and the supervisor loop that records delegations is never shown."
+      ],
+      "links": []
+    },
+    {
+      "id": "inspector",
+      "label": "Inspector",
+      "kind": "guide",
+      "group": "Debugging",
+      "child": false,
+      "docPath": "inspector",
+      "reachable": "sidebar",
+      "status": "N/A",
+      "findings": [],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Note: the page says there is no React Native build of Inspector."
+      ],
+      "links": []
+    },
+    {
+      "id": "state-rendering",
+      "label": "State Rendering",
+      "kind": "guide",
+      "group": "Generative UI",
+      "child": true,
+      "docPath": "generative-ui/state-rendering",
+      "reachable": "in-content",
+      "linkedFrom": "generative-ui",
+      "status": "❌",
+      "findings": [
+        17
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Issue: the agent writes notes/preferences but ResearchProgress reads status/draft/completed/total from an agent 'researcher' the page never registers, so the panel can't update."
+      ],
+      "links": []
+    },
+    {
+      "id": "state-streaming",
+      "label": "State Streaming",
+      "kind": "guide",
+      "group": "Shared state",
+      "child": true,
+      "docPath": "shared-state/streaming",
+      "reachable": "in-content",
+      "linkedFrom": "shared-state, shared-state/rendering-in-app, shared-state/agent-readonly, multi-agent/subagents",
+      "status": "❌",
+      "findings": [
+        18
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Issue: only a branch 'inside the streamed tool-argument handler' and a helper are shown; the handler, loop and tool wiring are missing."
+      ],
+      "links": []
+    },
+    {
+      "id": "programmatic-control",
+      "label": "Programmatic Control",
+      "kind": "guide",
+      "group": null,
+      "child": false,
+      "docPath": "programmatic-control",
+      "reachable": "in-content",
+      "linkedFrom": "custom-look-and-feel/headless-ui, shared-state",
+      "status": "✅",
+      "findings": [
+        19
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Note: the backend step says to wrap Claude Agent SDK once but shows no code."
+      ],
+      "links": []
+    },
+    {
+      "id": "agent-config",
+      "label": "Agent Config",
+      "kind": "guide",
+      "group": null,
+      "child": false,
+      "docPath": "agent-config",
+      "reachable": "in-content",
+      "linkedFrom": "inspector",
+      "status": "❌",
+      "findings": [
+        20
+      ],
+      "block": null,
+      "review": {
+        "verdict": null,
+        "approvedAt": null,
+        "by": null
+      },
+      "added": "2026-11-19",
+      "probe": "pending",
+      "notes": [
+        "Issue: no React Native frontend code, and the page names three different config channels (shared state, forwarded_props, useAgentContext)."
+      ],
+      "links": []
+    }
+  ]
 }

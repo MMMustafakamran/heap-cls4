@@ -22,62 +22,94 @@ import {
   type UiNode,
 } from './adb';
 
-/** Finding clips (❌/⚠️, level 1): doc highlight before the IDE, Notepad after the demo. Filled per page. */
+/** Finding clips (❌/⚠️, level 1): doc highlight before the IDE, Notepad after the demo. Filled per page.
+ *  DRAFT 2026-11-19: written from the doc text only, no probe yet (no Anthropic credit). Recheck after probing. */
 export const FINDING_NOTES: Record<string, string> = {
-  quickstart: `this is the antigravity react native quickstart, it should give u a chat running on an antigravity agent
+  quickstart: `this is the claude agent sdk react native quickstart,should give u a chat running on a claude agent
 but the runtime only registers a built in openai agent, model openai gpt 6 luna
-the chat works but its not antigravity at all
-page never shows how to serve the antigravity agent or hook it into the runtime
-had to guess the backend and an httpagent from ag-ui client which no install step names`,
-  'tool-rendering': `page says the agent exposes get_weather and a few more tools so the cards render
-but TOOLS has search_flights get_stock_price roll_d20 and SYSTEM_PROMPT and build that are never shown
-so the agent file fails on import, nameerror, server never starts
-build comes from agents _common which isnt published anywhere
-only works after copying the missing tools and prompt from somewhere else`,
-  'multimodal-attachments': `page says attach a photo and the agent answers about it
+so the chat answers but its not claude at all
+no pip install for ag-ui claude sdk,no python server,nothing that hooks claude into the runtime
+had to guess the claude adapter backend and an httpagent from ag-ui client myself`,
+  'multimodal-attachments': `page says attach a photo ask a question and the agent answers about it
 but the quick start has no message list, just a comment saying ur list goes here
-so after sending nothing shows up, the answer never appears
-and a red error shows on load, text strings must be rendered within a text component
-the callout even says the default reader fails on todays expo file system`,
+so after sending nothing shows up,the answer never appears on screen
+and the install step is expo only while the quickstart is a plain react native cli app`,
+  'tool-rendering': `page says the agent runs get_weather and the weather card renders in the chat
+but the agent is just two pieces of a claude sdk adapter file
+it calls normalize claude agent sdk model, build sdk tools, set state and more,none defined anywhere
+so the module wont even import,nameerror, server never starts
+had to write all the missing helpers myself to get a card`,
+  'shared-state': `page says the agent reads and writes notes and preferences shared with the app
+but the agent code is three chunks of a messages api loop thats never shown
+run shared state read write agent, normalize claude model, default anthropic model all undefined
+no imports no install, cant run it as written
+wrote the whole loop myself`,
   hitl: `page says tap a slot and the agent confirms the time u picked
-the card shows up fine, tue 9 am wed 2 pm none of these work
-but tapping a slot does nothing visible, no done line, no reply, card stays open
-the answer does reach the agent so its the react native side not finishing
-same backend works on the web page`,
-  'use-interrupt': `page says tap tomorrow at 09 00 and the agent continues
-but the backend section says not available for google antigravity yet
-so theres no agent to use, had to write one myself
-even then the picker shows and tapping it changes nothing`,
+but theres no claude agent on the page at all
+and the first snippet is a web page.tsx with book_call and hitl in chat,doesnt match the rn code
+had to use my own adapter just to get the card`,
+  'use-interrupt': `page says tap tomorrow at 09 00 and the agent continues with ur choice
+but the backend is just a system prompt with dedent,dedent never imported
+no agent no adapter no server to put that prompt in
+had to wrap it in my own claude adapter`,
   'governed-actions': `page says tap reject and the agent replies it didnt send the email
-but the only agent code is langgraph, interrupt and deliver_email, nothing for antigravity
-so for antigravity u have to write the whole agent urself
-with my own agent the card shows and reject works,but thats not from the page`,
+but the only agent code is langgraph,interrupt and deliver_email
+nothing for claude agent sdk so u have to write the whole agent urself
+my own adapter only covers the approval card half`,
   subagents: `page says the delegation log renders live as the supervisor calls sub agents
-but theres no react native code for the log at all, just one sentence
-had to write the whole frontend myself
-and the agent imports httpx which the install step never installs`,
+but theres no react native code for the log, just one sentence
+and the supervisor loop that writes delegations is never shown,only helper pieces
+normalize claude model and anthropic subagent model undefined too
+wrote both the loop and the log myself`,
+  'state-rendering': `page says the research progress panel updates while the agent works
+but the panel reads status draft completed total from an agent called researcher
+the agent on the page only writes notes and preferences,and researcher is never registered
+so nothing the agent does can move the panel
+runner function isnt shown either`,
+  'state-streaming': `page says the document streams into the view while the agent writes it
+but it only shows one branch that runs inside the streamed tool argument handler
+the handler,the loop and the write_document tool setup are never shown
+plus a second helper doing the same thing,no word which one to use
+had to build the handler myself`,
+  'agent-config': `page says the agent reads tone and expertise config and folds it into the prompt
+but theres no react native frontend code at all for setting the config
+and it names three ways to send it,shared state,forwarded props,useagentcontext
+latestvalidconfig is just pseudocode
+had to guess both the frontend and the backend side`,
 };
 export const FINDING_EVIDENCE: Record<string, DocEvidence[]> = {
   quickstart: [
-    { text: 'model: "openai:gpt-6-luna",', caption: 'Only a built-in OpenAI agent; no Antigravity agent (FINDINGS.md #1)' },
-  ],
-  'tool-rendering': [
-    { text: 'Backend tools are plain Python functions. Pass them as', caption: 'Three tools, SYSTEM_PROMPT and build never defined (FINDINGS.md #2)' },
+    { text: 'model: "openai:gpt-6-luna",', caption: 'Only a built-in OpenAI agent; no Claude agent (FINDINGS.md #1)' },
   ],
   'multimodal-attachments': [
-    { text: 'Your message list goes here', caption: 'No message list; Attach opens nothing (FINDINGS.md #9)' },
+    { text: 'Your message list goes here', caption: 'No message list (FINDINGS.md #5)' },
+  ],
+  'tool-rendering': [
+    { text: '"model": _normalize_claude_agent_sdk_model(model),', caption: 'Adapter helpers never defined (FINDINGS.md #8)' },
+  ],
+  'shared-state': [
+    { text: 'async for chunk in run_shared_state_read_write_agent(input_data):', caption: 'Runner never shown (FINDINGS.md #9)' },
   ],
   hitl: [
-    { text: 'Tap a slot, and the agent confirms the time you picked', caption: 'Tapping a slot never completes (FINDINGS.md #10)' },
+    { text: 'agentId: "hitl-in-chat",', caption: 'Web page.tsx excerpt on an RN page; no Claude agent (FINDINGS.md #11)' },
   ],
   'use-interrupt': [
-    { text: 'Not available for Google Antigravity yet', caption: 'No Antigravity backend (FINDINGS.md #11)' },
+    { text: 'SYSTEM_PROMPT = dedent("""', caption: 'Backend is only a prompt (FINDINGS.md #12)' },
   ],
   'governed-actions': [
-    { text: 'In a LangGraph Python agent, the tool calls', caption: 'LangGraph-only agent (FINDINGS.md #13)' },
+    { text: 'In a LangGraph Python agent, the tool calls', caption: 'LangGraph-only agent (FINDINGS.md #14)' },
   ],
   subagents: [
-    { text: 'On the frontend, the delegation log is a reactive render of the', caption: 'No frontend code for the log (FINDINGS.md #14)' },
+    { text: 'On the frontend, the delegation log is a reactive render of the', caption: 'No frontend code for the log (FINDINGS.md #16)' },
+  ],
+  'state-rendering': [
+    { text: 'agentId: "researcher",', caption: 'Panel reads an agent/state the backend never provides (FINDINGS.md #17)' },
+  ],
+  'state-streaming': [
+    { text: 'branch runs inside the streamed tool-argument handler.', caption: 'Handler never shown (FINDINGS.md #18)' },
+  ],
+  'agent-config': [
+    { text: 'The Claude Agent SDK demo reads configuration from shared state and folds it', caption: 'No RN frontend; three config channels (FINDINGS.md #20)' },
   ],
 };
 /** Level 2 (already reported): clip ends after the demo. */
