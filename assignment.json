@@ -1,0 +1,85 @@
+{
+  "framework": "Claude Agent SDK (Python)",
+  "ui": "react-native",
+  "repo": "heap-cls4",
+  "docBase": "https://docs.copilotkit.ai/react-native/claude-sdk-python/",
+  "versions": {
+    "@copilotkit/react-native": "1.89.0",
+    "@copilotkit/runtime": "1.89.0",
+    "react-native": "0.88.1",
+    "zod": "3.25.76"
+  },
+  "testedContext": {
+    "os": "Microsoft Windows 11 Pro",
+    "packageManager": "npm 11 (Node 26.7.0)",
+    "device": "Android emulator, API 36 x86_64 (Pixel 7)"
+  },
+  "report": {
+    "style": "status",
+    "h1": "Claude Agent SDK (Python)",
+    "title": "Claude Agent SDK Python (React Native) status",
+    "quickstartHeading": "Quickstart",
+    "quickstartHeader": [
+      "Frontend",
+      "Quickstart"
+    ],
+    "clipsToUpload": true,
+    "columns": [
+      "Page/Section",
+      "Results"
+    ],
+    "resultColumn": 1,
+    "guidesHeading": "Guides (React Native)"
+  },
+  "sections": [
+    {
+      "label": "Basics",
+      "cells": [
+        "Section"
+      ]
+    },
+    {
+      "label": "Chat",
+      "cells": [
+        "Sub section"
+      ]
+    },
+    {
+      "label": "Custom Look and Feel",
+      "cells": [
+        "Sub section"
+      ]
+    },
+    {
+      "label": "Generative UI",
+      "cells": [
+        "Section"
+      ]
+    },
+    {
+      "label": "Controlled",
+      "cells": [
+        "Sub section"
+      ]
+    },
+    {
+      "label": "Shared state",
+      "cells": [
+        "Section"
+      ]
+    },
+    {
+      "label": "Human-in-the-loop",
+      "cells": [
+        "Section"
+      ]
+    },
+    {
+      "label": "Debugging",
+      "cells": [
+        "Section"
+      ]
+    }
+  ],
+  "pages": []
+}

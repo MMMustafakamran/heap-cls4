@@ -1,0 +1,279 @@
+/**
+ * Demo segment on the Android emulator. The recorder's browser shows the device mirror
+ * (android-mirror.ts); everything the "person" does goes to the device through adb:
+ * open the page by deep link, tap the composer, type the prompt at a human pace, tap send,
+ * wait for the screen to settle. The cursor glides to the matching spot on the mirrored
+ * screen before each tap, so the clip reads like someone clicking in the emulator window.
+ *
+ * Same verdicts as tools/probe-android.mts: red box, app died, no reply -> ctx.fail.
+ * The device's logcat for the take is appended to <repo>/logs/android-logcat.log, so the
+ * failure terminal (core/failure-terminal.ts reads <repo>/logs) can show it.
+ */
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { type Page } from 'playwright';
+import { type ActionContext, type PageActionHandler, type PageRecordConfig } from '../core/types';
+import { humanClick, humanGlide, sleep } from '../core/overlays/cursor';
+import { checkpoint, logAction, mark } from '../core/timeline';
+import { type DocEvidence, showFinding } from './doc-evidence';
+import { registerDocEvidence } from '../core/doc-evidence';
+import {
+  appAlive, byLabel, center, dump, inputText, isRedbox, logcat, openDeepLink, sh, tapXY, texts, withDeviceLock,
+  type UiNode,
+} from './adb';
+
+/** Finding clips (❌/⚠️, level 1): doc highlight before the IDE, Notepad after the demo. Filled per page. */
+export const FINDING_NOTES: Record<string, string> = {
+  quickstart: `this is the antigravity react native quickstart, it should give u a chat running on an antigravity agent
+but the runtime only registers a built in openai agent, model openai gpt 6 luna
+the chat works but its not antigravity at all
+page never shows how to serve the antigravity agent or hook it into the runtime
+had to guess the backend and an httpagent from ag-ui client which no install step names`,
+  'tool-rendering': `page says the agent exposes get_weather and a few more tools so the cards render
+but TOOLS has search_flights get_stock_price roll_d20 and SYSTEM_PROMPT and build that are never shown
+so the agent file fails on import, nameerror, server never starts
+build comes from agents _common which isnt published anywhere
+only works after copying the missing tools and prompt from somewhere else`,
+  'multimodal-attachments': `page says attach a photo and the agent answers about it
+but the quick start has no message list, just a comment saying ur list goes here
+so after sending nothing shows up, the answer never appears
+and a red error shows on load, text strings must be rendered within a text component
+the callout even says the default reader fails on todays expo file system`,
+  hitl: `page says tap a slot and the agent confirms the time u picked
+the card shows up fine, tue 9 am wed 2 pm none of these work
+but tapping a slot does nothing visible, no done line, no reply, card stays open
+the answer does reach the agent so its the react native side not finishing
+same backend works on the web page`,
+  'use-interrupt': `page says tap tomorrow at 09 00 and the agent continues
+but the backend section says not available for google antigravity yet
+so theres no agent to use, had to write one myself
+even then the picker shows and tapping it changes nothing`,
+  'governed-actions': `page says tap reject and the agent replies it didnt send the email
+but the only agent code is langgraph, interrupt and deliver_email, nothing for antigravity
+so for antigravity u have to write the whole agent urself
+with my own agent the card shows and reject works,but thats not from the page`,
+  subagents: `page says the delegation log renders live as the supervisor calls sub agents
+but theres no react native code for the log at all, just one sentence
+had to write the whole frontend myself
+and the agent imports httpx which the install step never installs`,
+};
+export const FINDING_EVIDENCE: Record<string, DocEvidence[]> = {
+  quickstart: [
+    { text: 'model: "openai:gpt-6-luna",', caption: 'Only a built-in OpenAI agent; no Antigravity agent (FINDINGS.md #1)' },
+  ],
+  'tool-rendering': [
+    { text: 'Backend tools are plain Python functions. Pass them as', caption: 'Three tools, SYSTEM_PROMPT and build never defined (FINDINGS.md #2)' },
+  ],
+  'multimodal-attachments': [
+    { text: 'Your message list goes here', caption: 'No message list; Attach opens nothing (FINDINGS.md #9)' },
+  ],
+  hitl: [
+    { text: 'Tap a slot, and the agent confirms the time you picked', caption: 'Tapping a slot never completes (FINDINGS.md #10)' },
+  ],
+  'use-interrupt': [
+    { text: 'Not available for Google Antigravity yet', caption: 'No Antigravity backend (FINDINGS.md #11)' },
+  ],
+  'governed-actions': [
+    { text: 'In a LangGraph Python agent, the tool calls', caption: 'LangGraph-only agent (FINDINGS.md #13)' },
+  ],
+  subagents: [
+    { text: 'On the frontend, the delegation log is a reactive render of the', caption: 'No frontend code for the log (FINDINGS.md #14)' },
+  ],
+};
+/** Level 2 (already reported): clip ends after the demo. */
+export const KNOWN_ISSUE = new Set<string>([]);
+registerDocEvidence(FINDING_EVIDENCE, { skip: KNOWN_ISSUE });
+
+/** Pages whose composer is the doc's own ChatScreen with a "Send" button; the rest use CopilotChat's "↑". */
+const SEND_LABEL: Record<string, string> = {
+  quickstart: 'Send', 'headless-ui': 'Send', markdown: 'Send', 'multimodal-attachments': 'Send',
+};
+
+/** Steps after the reply settles: tap a node by its text, wait N seconds, or wait until a text shows up. */
+type ThenStep = { tap?: string; wait?: number; waitfor?: string; timeout?: number; /** device px: x1,y1,x2,y2 */ swipe?: [number, number, number, number];
+  /** HARNESS: press Back only while the soft keyboard is up (it covered the swipe area) */ hideKeyboard?: boolean };
+type PromptCfg = { prompt?: string; tap?: string; settle?: number; timeout?: number; noInput?: boolean; then?: ThenStep[];
+  /** steps before typing (e.g. open a modal) */ before?: ThenStep[]; /** which text field is the chat composer */ input?: 'first' | 'last' };
+
+/** First node whose text/desc equals the label, else the first one containing it (case-insensitive). */
+function findText(nodes: UiNode[], label: string): UiNode | undefined {
+  const l = label.trim().toLowerCase();
+  return byLabel(nodes, label) ?? nodes.find((n) => (n.text || n.desc).toLowerCase().includes(l) && n.bounds[2] > n.bounds[0]);
+}
+async function waitForText(label: string, timeoutS: number): Promise<UiNode | undefined> {
+  const end = Date.now() + timeoutS * 1000;
+  for (;;) {
+    const n = findText(dump().nodes, label);
+    if (n || Date.now() > end) return n;
+    await sleep(1500);
+  }
+}
+/** One before/then step: wait for a text, tap a node by its text (glide-click on the mirror), or wait. */
+async function runStep(page: Page, step: ThenStep, ctx: ActionContext): Promise<void> {
+  if (step.waitfor) {
+    const n = await waitForText(step.waitfor, step.timeout ?? 60);
+    logAction('waitfor', step.waitfor, n ? 'ok' : 'timeout');
+    if (!n) ctx.warn(`"${step.waitfor}" never showed up on screen`);
+  }
+  if (step.tap) {
+    const n = await waitForText(step.tap, step.timeout ?? 10);
+    if (n) { const d = deviceSize(dump().nodes); await tapNode(page, n, step.tap, d.w, d.h); }
+    else ctx.warn(`No "${step.tap}" on screen to tap`);
+    await sleep(1500);
+  }
+  if (step.hideKeyboard && /mInputShown=true/.test(sh('dumpsys input_method'))) { sh('input keyevent 4'); logAction('key', 'back (hide keyboard)'); await sleep(1000); }
+  if (step.swipe) { const [a, b, c, d] = step.swipe; sh(`input swipe ${a} ${b} ${c} ${d} 600`); logAction('swipe', step.swipe.join(',')); await sleep(1500); }
+  if (step.wait) await sleep(step.wait * 1000);
+}
+/** tools/probe-prompts.json (main session keeps it), read per take so edits apply without a restart. */
+function promptFor(root: string, config: PageRecordConfig): PromptCfg {
+  const file = join(root, 'tools', 'probe-prompts.json');
+  let all: Record<string, PromptCfg> = {};
+  try { if (existsSync(file)) all = JSON.parse(readFileSync(file, 'utf8')); } catch {}
+  const p = all[config.id] ?? {};
+  return { ...p, prompt: p.prompt ?? config.prompt, tap: p.tap ?? SEND_LABEL[config.id] ?? '↑' };
+}
+
+/** Device pixel -> viewport point on the mirrored screen (<img id="screen">, object-fit: contain). */
+async function toViewport(page: Page, x: number, y: number, devW: number, devH: number): Promise<{ x: number; y: number } | null> {
+  return page.evaluate(([dx, dy, dw, dh]) => {
+    const img = document.getElementById('screen') as HTMLImageElement | null;
+    if (!img) return null;
+    const r = img.getBoundingClientRect();
+    const s = Math.min(r.width / dw, r.height / dh);
+    const ox = r.left + (r.width - dw * s) / 2, oy = r.top + (r.height - dh * s) / 2;
+    return { x: ox + dx * s, y: oy + dy * s };
+  }, [x, y, devW, devH]).catch(() => null);
+}
+
+/** Glide to a node on the mirrored screen, click (visual only), tap it on the device. */
+async function tapNode(page: Page, node: UiNode, what: string, devW: number, devH: number): Promise<void> {
+  const [x, y] = center(node);
+  mark('click', what);
+  const pt = await toViewport(page, x, y, devW, devH);
+  if (pt) { await humanGlide(page, pt.x, pt.y, 22); await humanClick(page); }
+  tapXY(x, y);
+  logAction('tap', what, 'ok', { x, y });
+}
+
+/** Human-paced typing through adb: 1-3 characters per `input text`, small pauses, a longer one now and then. */
+async function typeHuman(prompt: string): Promise<void> {
+  let i = 0;
+  while (i < prompt.length) {
+    const n = 1 + Math.floor(Math.random() * 3);
+    const chunk = prompt.slice(i, i + n);
+    i += n;
+    inputText(chunk);
+    await sleep(60 + Math.random() * 120 + (chunk.includes(' ') && Math.random() < 0.15 ? 350 : 0));
+  }
+}
+
+/** Device size as the screenshots see it (uiautomator bounds use the same pixels). */
+function deviceSize(nodes: UiNode[]): { w: number; h: number } {
+  const root = nodes[0]?.bounds;
+  return root && root[2] > 0 ? { w: root[2], h: root[3] } : { w: 1080, h: 2400 };
+}
+
+/**
+ * The standard Android take: deep link, prompt, send, settle. Returns the final screen texts.
+ * The device lock is held for the whole demo, so a probe on the same emulator waits.
+ */
+export async function runAndroidChat(page: Page, config: PageRecordConfig, root: string, ctx: ActionContext): Promise<string[]> {
+  return withDeviceLock(root, async () => {
+    const cfg = promptFor(root, config);
+    const timeoutMs = (cfg.timeout ?? 120) * 1000;
+    const settleMs = (cfg.settle ?? 12) * 1000;
+    const t0 = Date.now();
+
+    openDeepLink(config.id);
+    logAction('deeplink', `copilotqacls://page/${config.id}`);
+    await sleep(6000);
+
+    // Optional steps before the prompt (tools/probe-prompts.json `before`), e.g. open a bottom sheet.
+    for (const step of cfg.before ?? []) await runStep(page, step, ctx);
+
+    let screen = dump();
+    // The dev build loads its JS bundle from Metro first: wait (up to 60 s) for the page's composer to appear.
+    if (cfg.prompt && !cfg.noInput) {
+      const until = Date.now() + 60_000;
+      while (!screen.nodes.some((n) => n.cls.endsWith('EditText')) && Date.now() < until) {
+        await sleep(2000);
+        screen = dump();
+      }
+    }
+    const { w, h } = deviceSize(screen.nodes);
+    let sentAt = 0;
+    let afterSend: string[] = [];
+
+    if (cfg.prompt && !cfg.noInput) {
+      const inputs = screen.nodes.filter((n) => n.cls.endsWith('EditText'));
+      const input = cfg.input === 'last' ? inputs[inputs.length - 1] : inputs[0];
+      if (!input) {
+        ctx.fail('No text input on the app screen');
+      } else {
+        await tapNode(page, input, 'composer', w, h);
+        await sleep(600);
+        mark('action', `type: ${cfg.prompt}`);
+        await typeHuman(cfg.prompt);
+        await sleep(700);
+        screen = dump();
+        const label = cfg.tap!;
+        const btn = byLabel(screen.nodes, label) ?? byLabel(screen.nodes, label === 'Send' ? '↑' : 'Send');
+        // Baseline = screen before sending: a fast reply can land within the 2 s below.
+        afterSend = texts(screen.nodes);
+        if (btn) await tapNode(page, btn, `send (${label})`, w, h);
+        else { sh('input keyevent 66'); logAction('key', 'enter (no send button)'); }
+        sentAt = Date.now();
+        await sleep(2000);
+      }
+    } else if (cfg.tap && cfg.noInput) {
+      const btn = byLabel(screen.nodes, cfg.tap);
+      if (btn) await tapNode(page, btn, cfg.tap, w, h);
+      else ctx.warn(`No "${cfg.tap}" button on screen`);
+    }
+
+    // Settle: visible text stops changing for settleMs, or the timeout. The cursor idles meanwhile.
+    let last = JSON.stringify(texts(dump().nodes)), stableSince = Date.now();
+    while (Date.now() - t0 < timeoutMs) {
+      await sleep(3000);
+      const now = JSON.stringify(texts(dump().nodes));
+      if (now !== last) { last = now; stableSince = Date.now(); }
+      else if (Date.now() - stableSince >= settleMs) break;
+    }
+
+    // Optional follow-up steps (tools/probe-prompts.json `then`), each tap a glide-click on the mirror.
+    for (const step of cfg.then ?? []) await runStep(page, step, ctx);
+
+    const finalTexts = texts(dump().nodes);
+    const alive = appAlive();
+    const red = finalTexts.filter(isRedbox);
+    const log = (() => { try { return logcat(); } catch { return ''; } })();
+    try {
+      const logs = join(root, 'logs');
+      mkdirSync(logs, { recursive: true });
+      appendFileSync(join(logs, 'android-logcat.log'), `\n===== ${new Date().toISOString()} ${config.id} =====\n${log}`);
+    } catch {}
+
+    void checkpoint('app-alive', 'app process still running', () => alive);
+    void checkpoint('no-redbox', 'no red box on screen', () => red.length === 0);
+    if (!alive) ctx.fail('The app process died during the take (see logs/android-logcat.log)');
+    if (red.length) { mark('error', red[0]); ctx.fail(`Red box on screen: ${red.slice(0, 3).join(' | ')}`); }
+    if (sentAt) {
+      const fresh = finalTexts.filter((t) => !afterSend.includes(t) && t !== cfg.prompt);
+      void checkpoint('reply', 'new text on screen after the prompt', () => fresh.join(' | ').slice(0, 300) || null);
+      if (!fresh.length && !red.length) ctx.fail('The agent never replied (screen unchanged after sending the prompt)');
+    }
+    await sleep(1500);
+    return finalTexts;
+  });
+}
+
+export const runAndroidStandard: PageActionHandler = async (page, config, root, ctx) => {
+  try {
+    await runAndroidChat(page, config, root, ctx);
+  } finally {
+    if (FINDING_NOTES[config.id] && !KNOWN_ISSUE.has(config.id)) {
+      await showFinding(page, config, FINDING_EVIDENCE[config.id], FINDING_NOTES[config.id]);
+    }
+  }
+};
