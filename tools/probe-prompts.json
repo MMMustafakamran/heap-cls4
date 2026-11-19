@@ -9,7 +9,7 @@
   "tool-rendering": {"prompt": "What's the weather in San Francisco?", "tap": "Send"},
   "state-rendering": {"prompt": "Write a short report on solar power", "tap": "Send"},
   "shared-state": {"prompt": "Remember that I like tea", "tap": "Send"},
-  "shared-state-rendering": {"steps": [{"tap": "ASK THE ASSISTANT"}, {"wait": 20}], "noInput": true, "tap": "ASK THE ASSISTANT", "then": [{"wait": 20}], "before": [{"waitfor": "ASK THE ASSISTANT", "timeout": 60}]},
+  "shared-state-rendering": {"steps": [{"tap": "ASK THE ASSISTANT"}, {"wait": 20}], "before": [{"waitfor": "ASK THE ASSISTANT", "timeout": 60}, {"tap": "ASK THE ASSISTANT"}, {"wait": 4}], "prompt": "Mark Build a prototype as done", "input": "last", "then": [{"hideKeyboard": true}, {"wait": 5}]},
   "agent-readonly": {"prompt": "What is my name?", "tap": "Send", "input": "last"},
   "state-streaming": {"prompt": "Write a short document about the ocean", "tap": "Send"},
   "agent-config": {"prompt": "Explain what an API is", "tap": "Send", "steps": [{"tap": "ENTHUSIASTIC"}, {"send": "Explain what an API is"}, {"wait": 10}]},
