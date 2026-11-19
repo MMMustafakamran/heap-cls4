@@ -47,18 +47,41 @@ for id in $(echo "$PAGES" | tr ',' ' '); do
 done
 node autorecorder/scripts/write-versions.mjs 2>/dev/null || echo "::warning::write-versions failed or missing"
 if [ "${MODE:-record}" = "probe" ]; then
-  # Probe mode (WORKFLOW.md B1): 3 runs per page, prompts from tools/probe-prompts.json.
-  # probe-android.mts writes out/probe/<id>/ fresh each call, so each run is moved to run<N>.
+  # Probe mode (WORKFLOW.md B1, owner 2026-11-19): 1 run per page; a page that failed (red box,
+  # log errors, prompt not sent or no reply) gets a 2nd run. probe-android.mts writes out/probe/<id>/
+  # fresh each call, so each run is moved to run<N>.
   IDS=$(echo "$PAGES" | tr ',' ' ')
   TSX=autorecorder/node_modules/.bin/tsx
   [ -x "$TSX" ] || TSX="npx -y tsx"
   mkdir -p out/probe-runs
-  for r in 1 2 3; do
-    for id in $IDS; do
+  probe_run() { # $1 = run number, rest = page ids
+    local r=$1; shift
+    for id in "$@"; do
       $TSX tools/probe-android.mts "$id" 2>&1 | tee -a logs/probe.log
       if [ -d "out/probe/$id" ]; then mkdir -p "out/probe-runs/$id"; rm -rf "out/probe-runs/$id/run$r"; mv "out/probe/$id" "out/probe-runs/$id/run$r"; fi
     done
-  done
+  }
+  probe_run 1 $IDS
+  FAILED=$(python3 - out/probe-runs $IDS <<'PY'
+import json, sys
+from pathlib import Path
+root = Path(sys.argv[1])
+for pid in sys.argv[2:]:
+    f = root / pid / "run1" / "result.json"
+    try:
+        r = json.loads(f.read_text(encoding="utf-8"))
+    except Exception:
+        print(pid); continue
+    texts = r.get("screenTexts") or []
+    before = set(r.get("textsBeforeSend") or [])
+    prompted = any(str(s.get("s", "")).startswith("typed:") for s in r.get("steps", []))
+    bad = (not r.get("appAlive") or not texts or r.get("redbox") or r.get("errors")
+           or r.get("sent") is False or (prompted and not [t for t in texts if t not in before])
+           or any(not x.get("ok") for x in r.get("followUps") or []))
+    if bad: print(pid)
+PY
+)
+  [ -n "$FAILED" ] && { echo "probe: 2nd run for failing pages: $FAILED"; probe_run 2 $FAILED; }
   rm -rf out/probe && mv out/probe-runs out/probe
   exit 0
 fi

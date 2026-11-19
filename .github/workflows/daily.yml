@@ -15,7 +15,7 @@ on:
   workflow_dispatch:   # manual only
     inputs:
       mode:
-        description: 'probe = fast checks (3 runs per page, probe-summary.md, no recorder/narration); record = full clips'
+        description: 'probe = fast checks (1 run per page, failing pages 2, probe-summary.md, no recorder/narration); record = full clips'
         required: false
         type: choice
         options: [record, probe]
@@ -235,7 +235,7 @@ jobs:
           if (sys.argv[2] or "").strip():
               n = int(float(sys.argv[2]))
           elif sys.argv[5] == "probe":
-              n = math.ceil(len(pages) / 6)   # probe: ~6 pages (x3 runs) per shard
+              n = math.ceil(len(pages) / 6)   # probe: ~6 pages per shard
           elif sys.argv[4]:
               n = math.ceil(len(pages) / 3)   # small explicit run: ~3 pages per shard
           else:
