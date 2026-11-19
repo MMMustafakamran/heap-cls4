@@ -140,7 +140,15 @@
       "notes": [
         "Note: no install command for the chat's native peers, and streamdown's Bundle Mode setup is only linked."
       ],
-      "links": []
+      "links": [
+        {
+          "text": null,
+          "clip": "CLAUDESDK-rn-02-PrebuiltComponents",
+          "loom": "https://www.loom.com/share/570461b6533349f5b20f36024b766ad3",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "markdown",
@@ -228,7 +236,15 @@
       "notes": [
         "Issue: the quick start has no message list (just a placeholder comment), so the agent's answer never shows."
       ],
-      "links": []
+      "links": [
+        {
+          "text": "Issue",
+          "clip": "CLAUDESDK-rn-05-MultimodalAttachments",
+          "loom": "https://www.loom.com/share/f42f1625f6e4406799e531831cbc9a92",
+          "narration": "narration/scripts/CLAUDESDK-rn-05-MultimodalAttachments.json",
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "frontend-tools",
@@ -254,7 +270,15 @@
       "notes": [
         "Note: the agent step is only a _build_frontend_tools helper with no imports or loop; the ClaudeAgentAdapter it names is never shown."
       ],
-      "links": []
+      "links": [
+        {
+          "text": null,
+          "clip": "CLAUDESDK-rn-06-FrontendTools",
+          "loom": "https://www.loom.com/share/15b85b38789a486b8b734b689e1ae7d6",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "generative-ui",
@@ -330,7 +354,15 @@
       "notes": [
         "Issue: the agent is two excerpts of a Claude Agent SDK adapter that calls about eight helpers and constants the page never defines."
       ],
-      "links": []
+      "links": [
+        {
+          "text": "Issue",
+          "clip": "CLAUDESDK-rn-09-ToolCallRendering",
+          "loom": "https://www.loom.com/share/fcc0afe0080a4885b7bb1b015e4fe33f",
+          "narration": "narration/scripts/CLAUDESDK-rn-09-ToolCallRendering.json",
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "shared-state",
@@ -355,7 +387,15 @@
       "notes": [
         "Issue: the agent is three fragments of a Messages API loop; run_shared_state_read_write_agent, normalize_claude_model and DEFAULT_ANTHROPIC_MODEL are never shown."
       ],
-      "links": []
+      "links": [
+        {
+          "text": "Issue",
+          "clip": "CLAUDESDK-rn-10-SharedState",
+          "loom": "https://www.loom.com/share/8ba70ecb94dc461697dec7be7268f2a8",
+          "narration": "narration/scripts/CLAUDESDK-rn-10-SharedState.json",
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "shared-state-rendering",
@@ -453,7 +493,15 @@
       "notes": [
         "Note: the backend is only a SYSTEM_PROMPT (dedent not imported); it goes into the quickstart-style ClaudeAgentAdapter, the picker itself is a frontend tool."
       ],
-      "links": []
+      "links": [
+        {
+          "text": null,
+          "clip": "CLAUDESDK-rn-14-PausingTheAgentForInput",
+          "loom": "https://www.loom.com/share/b32d1fb54c994beda4f0ab17d6f08459",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "hitl-headless",
@@ -511,7 +559,15 @@
       "notes": [
         "Note: the useInterrupt agent example is LangGraph only; the useHumanInTheLoop tool-call pattern on the same page works with the plain Claude adapter."
       ],
-      "links": []
+      "links": [
+        {
+          "text": null,
+          "clip": "CLAUDESDK-rn-16-GovernedActionApprovalUi",
+          "loom": "https://www.loom.com/share/83fcd6e51165428bad162afcb20db4d0",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "webmcp",
@@ -561,7 +617,15 @@
       "notes": [
         "Issue: no frontend code for the delegation log, and the supervisor loop that records delegations is never shown."
       ],
-      "links": []
+      "links": [
+        {
+          "text": "Issue",
+          "clip": "CLAUDESDK-rn-18-SubAgents",
+          "loom": "https://www.loom.com/share/36fd6a7d505e43deb1779374c86f3f0d",
+          "narration": "narration/scripts/CLAUDESDK-rn-18-SubAgents.json",
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "inspector",
@@ -610,7 +674,15 @@
       "notes": [
         "Issue: the agent writes notes/preferences but ResearchProgress reads status/draft/completed/total from an agent 'researcher' the page never registers, so the panel can't update."
       ],
-      "links": []
+      "links": [
+        {
+          "text": "Issue",
+          "clip": "CLAUDESDK-rn-20-StateRendering",
+          "loom": "https://www.loom.com/share/432d4161a70a47c59d67d1fb120872ce",
+          "narration": "narration/scripts/CLAUDESDK-rn-20-StateRendering.json",
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "state-streaming",
@@ -636,7 +708,15 @@
       "notes": [
         "Issue: only a branch 'inside the streamed tool-argument handler' and a helper are shown; the handler, loop and tool wiring are missing."
       ],
-      "links": []
+      "links": [
+        {
+          "text": "Issue",
+          "clip": "CLAUDESDK-rn-21-StateStreaming",
+          "loom": "https://www.loom.com/share/41577e92ebb04cbcb4b508a9ce00cc48",
+          "narration": "narration/scripts/CLAUDESDK-rn-21-StateStreaming.json",
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "programmatic-control",
@@ -688,7 +768,15 @@
       "notes": [
         "Issue: no React Native frontend code, and the page names three different config channels (shared state, forwarded_props, useAgentContext)."
       ],
-      "links": []
+      "links": [
+        {
+          "text": "Issue",
+          "clip": "CLAUDESDK-rn-23-AgentConfig",
+          "loom": "https://www.loom.com/share/e296d9fa21ef48c09ad1dcbc5d8d19f4",
+          "narration": "narration/scripts/CLAUDESDK-rn-23-AgentConfig.json",
+          "filmed": "2026-11-19"
+        }
+      ]
     }
   ]
 }
