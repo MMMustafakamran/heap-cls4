@@ -248,7 +248,7 @@ export const PAGES = definePages([
     endLine: 13,
     extraTabs: [
       // FINDINGS.md #12: the page's backend is only SYSTEM_PROMPT; dedent import and adapter are HARNESS
-      { filePath: 'backend/agents/use_interrupt.py', startLine: 1, endLine: 37, addedText: 'adapter = ClaudeAgentAdapter(  # HARNESS: quickstart main.py adapter, with the page's SYSTEM_PROMPT' },
+      { filePath: 'backend/agents/use_interrupt.py', startLine: 1, endLine: 37, addedText: "adapter = ClaudeAgentAdapter(  # HARNESS: quickstart main.py adapter, with the page's SYSTEM_PROMPT" },
       { filePath: 'MyCopilotApp/pages/use-interrupt/runtime.ts', startLine: 1, endLine: 13 },
       { filePath: 'MyCopilotApp/pages/use-interrupt/src/MeetingChat.tsx', startLine: 1, endLine: 25 },
     ],
