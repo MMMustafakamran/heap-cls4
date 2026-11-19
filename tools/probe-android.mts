@@ -22,14 +22,15 @@ const SERIAL = opt("serial", process.env.ANDROID_SERIAL || "emulator-5554")!;
 const PKG = "com.claudesdkapp";
 const TIMEOUT = Number(opt("timeout", "120")) * 1000;
 const SETTLE = Number(opt("settle", "12")) * 1000;
-const prompts: Record<string, { prompt?: string; tap?: string }> =
+type Step = { tap?: string; wait?: number; send?: string };
+const prompts: Record<string, { prompt?: string; tap?: string; steps?: Step[] }> =
   fs.existsSync("tools/probe-prompts.json") ? JSON.parse(fs.readFileSync("tools/probe-prompts.json", "utf8")) : {};
 
 const adb = (...a: string[]) => execFileSync(ADB, ["-s", SERIAL, ...a], { maxBuffer: 64 << 20 });
 const sh = (cmd: string) => adb("shell", cmd).toString();
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-type Node = { text: string; desc: string; cls: string; bounds: [number, number, number, number] };
+type Node = { text: string; desc: string; hint: string; clickable: boolean; cls: string; bounds: [number, number, number, number] };
 function dump(): { xml: string; nodes: Node[] } {
   sh("uiautomator dump /sdcard/ui.xml >/dev/null 2>&1");
   const xml = adb("exec-out", "cat", "/sdcard/ui.xml").toString();
@@ -37,16 +38,38 @@ function dump(): { xml: string; nodes: Node[] } {
   for (const m of xml.matchAll(/<node [^>]*>/g)) {
     const a = (k: string) => m[0].match(new RegExp(`${k}="([^"]*)"`))?.[1] ?? "";
     const b = a("bounds").match(/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/);
-    nodes.push({ text: unesc(a("text")), desc: unesc(a("content-desc")), cls: a("class"), bounds: b ? [+b[1], +b[2], +b[3], +b[4]] as any : [0, 0, 0, 0] });
+    nodes.push({ text: unesc(a("text")), desc: unesc(a("content-desc")), hint: unesc(a("hint")), clickable: a("clickable") === "true", cls: a("class"), bounds: b ? [+b[1], +b[2], +b[3], +b[4]] as any : [0, 0, 0, 0] });
   }
   return { xml, nodes };
 }
 const unesc = (s: string) => s.replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#10;/g, "\n").replace(/&amp;/g, "&");
 const center = (n: Node) => [Math.round((n.bounds[0] + n.bounds[2]) / 2), Math.round((n.bounds[1] + n.bounds[3]) / 2)];
 const tap = (n: Node) => { const [x, y] = center(n); sh(`input tap ${x} ${y}`); };
-// adb `input text` needs spaces as %s and shell metacharacters escaped
-const typeText = (t: string) => sh(`input text "${t.replace(/(["\\$`])/g, "\\$1").replace(/ /g, "%s").replace(/([&|;<>()'])/g, "\\$1")}"`);
+// The command is one device-shell line: single-quote the argument (only ' needs the '\'' dance, every
+// other char is literal inside '...'); `input text` splits on spaces, so spaces become %s.
+const typeText = (t: string) => sh(`input text '${t.replace(/ /g, "%s").replace(/'/g, `'\\''`)}'`);
 const shot = (file: string) => fs.writeFileSync(file, adb("exec-out", "screencap", "-p"));
+const label = (n: Node) => (n.text || n.desc).trim().toLowerCase();
+// step targets: "re:<regex>" = first node matching; else exact text/content-desc (case-insensitive, [brackets] ignored), else the first node containing it
+const findLabel = (nodes: Node[], want: string) => {
+  if (want.startsWith("re:")) { const re = new RegExp(want.slice(3), "i"); return nodes.find((n) => re.test((n.text || n.desc).trim()) && n.bounds[2] > n.bounds[0]); }
+  const w = want.trim().toLowerCase(), strip = (x: string) => x.replace(/^\[|\]$/g, "");
+  return nodes.find((n) => strip(label(n)) === w) || nodes.find((n) => label(n).includes(w) && n.bounds[2] > n.bounds[0]);
+};
+// chat input: the EditText whose hint/placeholder reads like "Type a message...", else the last EditText
+const chatInput = (nodes: Node[]) => {
+  const eds = nodes.filter((n) => n.cls.endsWith("EditText"));
+  return eds.find((n) => /type a message|message|ask/i.test(n.hint)) || eds.find((n) => /^type a message/i.test(n.text)) || eds[eds.length - 1];
+};
+// send button: text/desc "Send" (or the configured label) or an arrow icon, else the clickable just right of the input
+const sendButton = (nodes: Node[], input: Node, want: string) => {
+  const w = want.toLowerCase();
+  const byName = nodes.find((n) => label(n) === w || /^(send|send message|submit|↑|➤|→)$/i.test((n.text || n.desc).trim()));
+  if (byName) return byName;
+  const [, iy1, ix2, iy2] = input.bounds, mid = (iy1 + iy2) / 2;
+  return nodes.filter((n) => n.clickable && n.bounds[0] >= ix2 - 4 && n.bounds[1] <= mid + 40 && n.bounds[3] >= mid - 40 && n.bounds[2] > n.bounds[0])
+    .sort((a, b) => a.bounds[0] - b.bounds[0])[0];
+};
 const texts = (nodes: Node[]) => nodes.map((n) => n.text || n.desc).filter(Boolean);
 
 async function probe(id: string) {
@@ -72,30 +95,64 @@ async function probe(id: string) {
   for (let i = 0; prompt && !flag("no-input") && i < 13 && !before.nodes.some((n) => n.cls.endsWith("EditText")); i++) {
     await sleep(3000); before = dump();
   }
+  const sendText = async (text: string): Promise<boolean> => {
+    const input = chatInput(dump().nodes);
+    if (!input) { res.errors.push("no text input on screen"); step("no EditText found"); return false; }
+    tap(input); await sleep(500); typeText(text); step(`typed: ${text}`);
+    await sleep(2000); // keyboard slide moves the Send button; let the layout settle before reading its bounds
+    const cur = dump();
+    res.textsBeforeSend = texts(cur.nodes);
+    const inp = chatInput(cur.nodes) || input;
+    const btn = sendButton(cur.nodes, inp, tapLabel || "Send");
+    if (btn) { tap(btn); step(`tapped send "${btn.text || btn.desc}" at ${center(btn)}`); }
+    else { sh("input keyevent 66"); step("no send button, pressed Enter"); }
+    await sleep(3000);
+    const after = dump();
+    const key = text.slice(0, 12);
+    const inp2 = chatInput(after.nodes);
+    const cleared = !inp2 || !inp2.text.includes(key);
+    const shown = after.nodes.some((n) => !n.cls.endsWith("EditText") && (n.text || n.desc).includes(key));
+    const sent = cleared || shown;
+    step(sent ? `sent (${cleared ? "input cleared" : "message shown"})` : "NOT sent: prompt still in the input");
+    return sent;
+  };
   if (prompt && !flag("no-input")) {
-    const input = before.nodes.find((n) => n.cls.endsWith("EditText"));
-    if (!input) { res.errors.push("no text input on screen"); step("no EditText found"); }
-    else {
-      tap(input); await sleep(500); typeText(prompt); step(`typed: ${prompt}`);
-      await sleep(2000); // keyboard slide moves the Send button; let the layout settle before reading its bounds
-      const cur = dump();
-      res.textsBeforeSend = texts(cur.nodes);
-      const btn = cur.nodes.find((n) => (n.text || n.desc).trim().toLowerCase() === tapLabel!.toLowerCase());
-      if (btn) { tap(btn); step(`tapped "${tapLabel}"`); }
-      else { sh("input keyevent 66"); step(`no "${tapLabel}" button, pressed Enter`); }
-    }
+    res.sent = await sendText(prompt);
   } else if (tapLabel && opt("tap")) {
-    const btn = before.nodes.find((n) => (n.text || n.desc).trim().toLowerCase() === tapLabel.toLowerCase());
+    const btn = findLabel(before.nodes, tapLabel);
     if (btn) { tap(btn); step(`tapped "${tapLabel}"`); } else res.errors.push(`no "${tapLabel}" button`);
   }
 
-  // settle: the visible text stops changing for SETTLE ms, or TIMEOUT
-  let last = JSON.stringify(texts(dump().nodes)), stableSince = Date.now();
-  while (Date.now() - t0 < TIMEOUT) {
-    await sleep(3000);
-    const now = JSON.stringify(texts(dump().nodes));
-    if (now !== last) { last = now; stableSince = Date.now(); }
-    else if (Date.now() - stableSince >= SETTLE) break;
+  // settle: the visible text stops changing for SETTLE ms, or the time limit
+  let stableSince = Date.now();
+  const settle = async (limit: number) => {
+    const end = Date.now() + limit;
+    let last = JSON.stringify(texts(dump().nodes)); stableSince = Date.now();
+    while (Date.now() < end) {
+      await sleep(3000);
+      const now = JSON.stringify(texts(dump().nodes));
+      if (now !== last) { last = now; stableSince = Date.now(); }
+      else if (Date.now() - stableSince >= SETTLE) break;
+    }
+  };
+  await settle(Math.max(15000, TIMEOUT - (Date.now() - t0)));
+  // follow-up steps (probe-prompts.json "steps"), each after the screen settled; step<N>.png after each
+  const followUps: Step[] = cfg.steps || [];
+  res.followUps = [];
+  for (let i = 0; i < followUps.length; i++) {
+    const st = followUps[i];
+    const rec: any = { step: st };
+    if (st.tap) {
+      const n = findLabel(dump().nodes, st.tap);
+      if (n) { tap(n); step(`step ${i + 1}: tapped "${n.text || n.desc}"`); rec.ok = true; }
+      else { step(`step ${i + 1}: no "${st.tap}" on screen`); res.errors.push(`step ${i + 1}: no "${st.tap}" on screen`); rec.ok = false; }
+    }
+    if (st.send) { rec.sent = await sendText(st.send); rec.ok = rec.sent; if (!rec.sent) res.sent = false; }
+    if (st.wait) await sleep(st.wait * 1000);
+    await settle(90000);
+    try { shot(path.join(out, `step${i + 1}.png`)); } catch {}
+    rec.screenTexts = texts(dump().nodes);
+    res.followUps.push(rec);
   }
   clearInterval(shots);
   const fin = dump();
@@ -107,6 +164,7 @@ async function probe(id: string) {
   res.durationS = +((Date.now() - t0) / 1000).toFixed(1);
   res.screenTexts = texts(fin.nodes);
   res.settled = Date.now() - stableSince >= SETTLE;
+  if (res.sent === undefined && prompt && !flag("no-input")) res.sent = false;
   res.appAlive = sh(`pidof ${PKG}`).trim() !== "";
   res.logErrors = log.split("\n").filter((l) => /^\S+ \S+ E\/|FATAL|Error:|TypeError|ReferenceError|Unhandled/.test(l)).slice(0, 40);
   res.redbox = res.screenTexts.some((t: string) => /^(Render Error|Uncaught Error|Error|Console Error)$/.test(t) || /is not a function|undefined is not|Cannot read propert/.test(t));

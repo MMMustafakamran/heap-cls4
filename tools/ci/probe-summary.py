@@ -27,7 +27,13 @@ for page in pages:
         before = set(r.get("textsBeforeSend") or [])
         prompted = any(str(s.get("s", "")).startswith("typed:") for s in r.get("steps", []))
         new = [t for t in texts if t not in before]
-        reply = ("y" if new else "n") if prompted else "no prompt"
+        if r.get("sent") is False:
+            reply = "not sent"
+        else:
+            reply = ("y" if new else "n") if prompted else "no prompt"
+        fu = r.get("followUps") or []
+        if fu:
+            reply += " / steps " + ",".join("ok" if f.get("ok") else "FAIL" for f in fu)
         errs = list(r.get("errors") or [])
         if r.get("redbox"):
             errs.append("RED BOX")

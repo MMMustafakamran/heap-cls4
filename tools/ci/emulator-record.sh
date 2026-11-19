@@ -36,6 +36,15 @@ for i in $(seq 1 15); do
   sleep 3
 done
 adb logcat -v time > logs/logcat.log 2>&1 &
+# HARNESS: wait for each page's runtime info route on :8173 (harness-runtime.ts) before the app asks for it;
+# a 404 after 60 s is a real missing route, logged as such.
+for id in $(echo "$PAGES" | tr ',' ' '); do
+  for i in $(seq 1 30); do
+    code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "http://localhost:8173/api/$id/copilotkit/info")
+    [ "$code" = "200" ] && break; sleep 2
+  done
+  echo "runtime info /api/$id/copilotkit/info: HTTP $code (try $i)"
+done
 node autorecorder/scripts/write-versions.mjs 2>/dev/null || echo "::warning::write-versions failed or missing"
 if [ "${MODE:-record}" = "probe" ]; then
   # Probe mode (WORKFLOW.md B1): 3 runs per page, prompts from tools/probe-prompts.json.
