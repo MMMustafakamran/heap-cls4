@@ -12,7 +12,9 @@
 import { definePages } from '../core/types';
 
 /** Registered but not recorded, with the reason printed on every run. */
-export const SKIP_RECORDING: Record<string, string> = {};
+export const SKIP_RECORDING: Record<string, string> = {
+  'generative-ui': 'overview page, no code to run (N/A row, no route in the app)',
+};
 
 export const PAGES = definePages([
   {
