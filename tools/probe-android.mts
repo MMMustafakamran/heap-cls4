@@ -77,7 +77,7 @@ async function probe(id: string) {
     if (!input) { res.errors.push("no text input on screen"); step("no EditText found"); }
     else {
       tap(input); await sleep(500); typeText(prompt); step(`typed: ${prompt}`);
-      await sleep(500);
+      await sleep(2000); // keyboard slide moves the Send button; let the layout settle before reading its bounds
       const cur = dump();
       res.textsBeforeSend = texts(cur.nodes);
       const btn = cur.nodes.find((n) => (n.text || n.desc).trim().toLowerCase() === tapLabel!.toLowerCase());
