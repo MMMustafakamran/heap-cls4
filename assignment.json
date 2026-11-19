@@ -106,7 +106,15 @@
       "notes": [
         "Issue: the Claude Agent SDK quickstart only registers a built-in OpenAI agent; it never shows a Claude agent, its install or how to connect it."
       ],
-      "links": []
+      "links": [
+        {
+          "text": "Issue",
+          "clip": "CLAUDESDK-rn-01-Quickstart",
+          "loom": "https://www.loom.com/share/37c57586e1b84d8a91d3383427c622ba",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "prebuilt-components",
@@ -158,7 +166,15 @@
       "notes": [
         "Note: same native peers / Bundle Mode setup gap as Prebuilt Components."
       ],
-      "links": []
+      "links": [
+        {
+          "text": null,
+          "clip": "CLAUDESDK-rn-03-MarkdownRendering",
+          "loom": "https://www.loom.com/share/5f261f0c229940309e384067171736dc",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "headless-ui",
@@ -179,7 +195,15 @@
       "added": "2026-11-19",
       "probe": "ci 44525111432 3/3",
       "notes": [],
-      "links": []
+      "links": [
+        {
+          "text": null,
+          "clip": "CLAUDESDK-rn-04-HeadlessUi",
+          "loom": "https://www.loom.com/share/71faa3d0d3f04df4bba049e1baf78c59",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "multimodal-attachments",
@@ -454,7 +478,15 @@
       "notes": [
         "Note: the code imports `./src/ChatScreen`, which the page never shows."
       ],
-      "links": []
+      "links": [
+        {
+          "text": null,
+          "clip": "CLAUDESDK-rn-15-HeadlessInterrupts",
+          "loom": "https://www.loom.com/share/ac454c8b4c2f4815b4b9667a81c7deea",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "governed-actions",
