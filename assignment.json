@@ -328,7 +328,15 @@
       "notes": [
         "Note: same helper-only agent step as Frontend Tools; nothing tells Claude to call render_bar_chart."
       ],
-      "links": []
+      "links": [
+        {
+          "text": null,
+          "clip": "CLAUDESDK-rn-08-ComponentsAsTools",
+          "loom": "https://www.loom.com/share/d5b7a47220d146c19031e871d38ec73d",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "tool-rendering",
@@ -443,7 +451,15 @@
       "added": "2026-11-19",
       "probe": "pending",
       "notes": [],
-      "links": []
+      "links": [
+        {
+          "text": null,
+          "clip": "CLAUDESDK-rn-12-AgentReadOnlyContext",
+          "loom": "https://www.loom.com/share/18961c684fc54575adbc1c5b63a95004",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "hitl",
@@ -468,7 +484,15 @@
       "notes": [
         "Note: no backend on the page beyond the frontend tool (the quickstart-style ClaudeAgentAdapter forwards it), and the first page.tsx snippet is a web excerpt (hitl-in-chat, book_call) that doesn't match the RN code."
       ],
-      "links": []
+      "links": [
+        {
+          "text": null,
+          "clip": "CLAUDESDK-rn-13-HitlOverview",
+          "loom": "https://www.loom.com/share/064e48bf3a314189b0d026fffd0d61b2",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "use-interrupt",
@@ -742,7 +766,15 @@
       "notes": [
         "Note: the backend step says to wrap Claude Agent SDK once but shows no code."
       ],
-      "links": []
+      "links": [
+        {
+          "text": null,
+          "clip": "CLAUDESDK-rn-22-ProgrammaticControl",
+          "loom": "https://www.loom.com/share/085f000eb8b64f51a12da04063e4d32d",
+          "narration": null,
+          "filmed": "2026-11-19"
+        }
+      ]
     },
     {
       "id": "agent-config",
