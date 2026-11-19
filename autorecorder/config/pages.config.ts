@@ -320,7 +320,7 @@ export const PAGES = definePages([
     startLine: 1,
     endLine: 34,
     // FINDINGS.md #16: the delegation log is not on the page
-    addedText: '// HARNESS: not on the page (the reader must write their own delegation log)',
+    ideAddedText: '// HARNESS: not on the page (the reader must write their own delegation log)',
     extraTabs: [
       { filePath: 'backend/agents/subagents.py', startLine: 1, endLine: 60, addedText: 'from agents._messages_loop import DEFAULT_ANTHROPIC_MODEL, normalize_claude_model, run_loop  # HARNESS: undefined on the page' },
       { filePath: 'MyCopilotApp/pages/subagents/runtime.ts', startLine: 1, endLine: 12 },
@@ -403,7 +403,7 @@ export const PAGES = definePages([
     startLine: 1,
     endLine: 20,
     // FINDINGS.md #20: no React Native frontend on the page
-    addedText: 'import { AgentConfigPanel } from "./src/AgentConfigPanel"; // HARNESS: not on the page',
+    ideAddedText: 'import { AgentConfigPanel } from "./src/AgentConfigPanel"; // HARNESS: not on the page',
     extraTabs: [
       { filePath: 'MyCopilotApp/pages/agent-config/runtime.ts', startLine: 1, endLine: 14 },
       { filePath: 'MyCopilotApp/pages/agent-config/src/AgentConfigPanel.tsx', startLine: 1, endLine: 39 },

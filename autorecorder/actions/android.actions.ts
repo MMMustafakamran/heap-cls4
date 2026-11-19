@@ -38,7 +38,8 @@ and the install step is expo only while the quickstart is a plain react native c
 but the agent is just two pieces of a claude sdk adapter file
 it calls normalize claude agent sdk model, build sdk tools, set state and more,none defined anywhere
 so the module wont even import,nameerror, server never starts
-had to write all the missing helpers myself to get a card`,
+wrote all the missing helpers myself,still no card
+the answer just comes back as plain text,no weather card shows`,
   'shared-state': `page says the agent reads and writes notes and preferences shared with the app
 but the agent code is three chunks of a messages api loop thats never shown
 run shared state read write agent, normalize claude model, default anthropic model all undefined
