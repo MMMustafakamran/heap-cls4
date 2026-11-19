@@ -1,0 +1,9 @@
+{
+ "text": "Moving on to the demo. I asked for the weather, it should show a weather card, but even with my added code, uh, the answer just comes back as plain text.",
+ "model": "s2.1-pro-free",
+ "refSha256": "2c9d0ecf4608feacc07c88e869cd4dec601481306a939b7be92fc1bff521a727",
+ "duration": 10.681,
+ "file": "ac9c2ded036f210b4fb2c87d85a22bc0.mp3",
+ "clip": "CLAUDESDK-rn-09-ToolCallRendering",
+ "at": "demo"
+}
