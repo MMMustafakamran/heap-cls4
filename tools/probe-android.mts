@@ -70,6 +70,9 @@ const sendButton = (nodes: Node[], input: Node, want: string) => {
   return nodes.filter((n) => n.clickable && n.bounds[0] >= ix2 - 4 && n.bounds[1] <= mid + 40 && n.bounds[3] >= mid - 40 && n.bounds[2] > n.bounds[0])
     .sort((a, b) => a.bounds[0] - b.bounds[0])[0];
 };
+const hideKeyboard = () => { if (/mInputShown=true/.test(sh("dumpsys input_method"))) sh("input keyevent 4"); };
+const swipeUp = () => { const size = sh("wm size").match(/(\d+)x(\d+)/); const w = size ? +size[1] : 320, h = size ? +size[2] : 640;
+  sh(`input swipe ${Math.round(w / 2)} ${Math.round(h * 0.6)} ${Math.round(w / 2)} ${Math.round(h * 0.25)} 400`); };
 const texts = (nodes: Node[]) => nodes.map((n) => n.text || n.desc).filter(Boolean);
 
 async function probe(id: string) {
@@ -113,6 +116,7 @@ async function probe(id: string) {
     const cleared = !inp2 || !inp2.text.includes(key);
     const shown = after.nodes.some((n) => !n.cls.endsWith("EditText") && (n.text || n.desc).includes(key));
     const sent = cleared || shown;
+    hideKeyboard(); // the IME covers half the screen (cards, approve buttons) on a small emulator
     step(sent ? `sent (${cleared ? "input cleared" : "message shown"})` : "NOT sent: prompt still in the input");
     return sent;
   };
@@ -143,12 +147,14 @@ async function probe(id: string) {
     const st = followUps[i];
     const rec: any = { step: st };
     if (st.tap) {
-      const n = findLabel(dump().nodes, st.tap);
+      let n = findLabel(dump().nodes, st.tap);
+      // not visible: the target can sit below the fold of the chat list; scroll the content up and look again
+      for (let k = 0; !n && k < 3; k++) { hideKeyboard(); swipeUp(); await sleep(1500); n = findLabel(dump().nodes, st.tap); }
       if (n) { tap(n); step(`step ${i + 1}: tapped "${n.text || n.desc}"`); rec.ok = true; }
       else { step(`step ${i + 1}: no "${st.tap}" on screen`); res.errors.push(`step ${i + 1}: no "${st.tap}" on screen`); rec.ok = false; }
     }
     if (st.send) { rec.sent = await sendText(st.send); rec.ok = rec.sent; if (!rec.sent) res.sent = false; }
-    if (st.wait) await sleep(st.wait * 1000);
+    if (st.wait) { await sleep(st.wait * 1000); if (rec.ok === undefined) rec.ok = true; }
     await settle(90000);
     try { shot(path.join(out, `step${i + 1}.png`)); } catch {}
     rec.screenTexts = texts(dump().nodes);

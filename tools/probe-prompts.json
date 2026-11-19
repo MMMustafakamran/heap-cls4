@@ -13,10 +13,10 @@
   "agent-readonly": {"prompt": "What is my name?", "tap": "Send"},
   "state-streaming": {"prompt": "Write a short document about the ocean", "tap": "Send"},
   "agent-config": {"prompt": "Explain what an API is", "tap": "Send", "steps": [{"tap": "ENTHUSIASTIC"}, {"send": "Explain what an API is"}, {"wait": 10}]},
-  "hitl": {"prompt": "Book a meeting about the Q3 roadmap", "tap": "Send", "steps": [{"tap": "re:\\d{1,2}(:\\d\\d)? ?(am|pm)"}, {"wait": 20}]},
-  "use-interrupt": {"prompt": "Book a call with Alice about onboarding", "tap": "Send", "steps": [{"tap": "re:\\d{1,2}(:\\d\\d)? ?(am|pm)"}, {"wait": 20}]},
+  "hitl": {"prompt": "Book a meeting about the Q3 roadmap", "tap": "Send", "steps": [{"tap": "re:(\\d{1,2}(:\\d\\d)? ?(am|pm)|\\d{1,2}:\\d\\d)"}, {"wait": 20}]},
+  "use-interrupt": {"prompt": "Book a call with Alice about onboarding", "tap": "Send", "steps": [{"tap": "re:(\\d{1,2}(:\\d\\d)? ?(am|pm)|\\d{1,2}:\\d\\d)"}, {"wait": 20}]},
   "hitl-headless": {"prompt": "Book a meeting about the Q3 roadmap", "tap": "Send", "steps": [{"tap": "TUE 3 PM"}, {"wait": 20}]},
-  "governed-actions": {"prompt": "Send an email to bob@example.com saying the launch moved to Friday", "tap": "Send", "steps": [{"tap": "re:^approve"}, {"wait": 20}]},
+  "governed-actions": {"prompt": "Send an email to bob@example.com saying the launch moved to Friday", "tap": "Send", "steps": [{"tap": "re:^(approve|allow|yes|confirm)"}, {"wait": 20}]},
   "subagents": {"prompt": "Research electric cars and write a short summary", "tap": "Send"},
   "programmatic-control": {"steps": [{"tap": "RUN AGENT"}, {"wait": 20}]}
 }
